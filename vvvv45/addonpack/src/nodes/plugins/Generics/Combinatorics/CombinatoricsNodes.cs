@@ -18,13 +18,13 @@ namespace VVVV.Nodes
     {
         #region fields & pins
         [Input("Input", Order = 0)]
-        protected IDiffSpread<T> FInput;
+        protected IDiffSpread<ISpread<T>> FInput;
 
-        [Input("With Repetition", IsSingle = true, IsToggle = true, DefaultBoolean = false, Order =2 )]
+        [Input("With Repetition", IsToggle = true, DefaultBoolean = false, Order =2 )]
         protected IDiffSpread<bool> FWithRepetition;
 
         [Output("Output")]
-        protected ISpread<T> FOutput;
+        protected ISpread<ISpread<T>> FOutput;
 
         [Output("Count")]
         protected ISpread<int> FCount;
@@ -44,30 +44,44 @@ namespace VVVV.Nodes
         override public void Evaluate(int SpreadMax)
 		{
 
-            if (FInput.IsChanged || FWithRepetition.IsChanged)
-            {
-                buffer.Clear();
-
-                for (int i = 0; i < FInput.SliceCount; i++)
-                {
-                    buffer.Add(FInput[i]);
-                }
-
-                if (FWithRepetition[0])
-                    go = GenerateOption.WithRepetition;
-                else
-                    go = GenerateOption.WithoutRepetition;
-
-                Permutations<T> permutations = new Permutations<T>(buffer, go);
+           if (FInput.IsChanged || FWithRepetition.IsChanged)
+           {
+              
+                int sMax = Math.Max(FInput.SliceCount, FWithRepetition.SliceCount);
 
                 FOutput.SliceCount = 0;
-                foreach (IList<T> p in permutations)
-                {
-                    FOutput.AddRange(p);
-                }
+                FCount.SliceCount = 0;
 
-                FCount.SliceCount = 1;
-                FCount[0] = (int)permutations.Count;
+                for (int i = 0; i < sMax; i++)
+                {
+                    buffer.Clear();
+
+                    FOutput.SliceCount++;
+
+                    if (FWithRepetition[i])
+                        go = GenerateOption.WithRepetition;
+                    else
+                        go = GenerateOption.WithoutRepetition;
+
+
+                    for (int j = 0; j < FInput[i].SliceCount; j++)
+                    {
+                        buffer.Add(FInput[i][j]);
+                    }
+
+                    Permutations<T> permutations = new Permutations<T>(buffer, go);
+
+                    FCount.Add((int)permutations.Count);
+
+                    FOutput[i].SliceCount = 0;
+                    foreach (IList<T> p in permutations)
+                    {
+                        FOutput[i].AddRange(p);
+                    }
+
+                    
+                }
+                
 
             }
 		}
@@ -119,7 +133,7 @@ namespace VVVV.Nodes
     public class CombinationsNode<T> : CombinatoricsBaseNode<T>
     {
         #region fields & pins
-        [Input("Subset Element Count", IsSingle = true, DefaultValue = 1, MinValue = 1, Order = 1 )]
+        [Input("Subset Element Count", DefaultValue = 1, MinValue = 1, Order = 1 )]
         protected IDiffSpread<int> FSubsetElementCount;
         #endregion fields & pins
 
@@ -129,30 +143,40 @@ namespace VVVV.Nodes
 
             if (FInput.IsChanged || FSubsetElementCount.IsChanged || FWithRepetition.IsChanged)
             {
-                buffer.Clear();
 
-                for (int i = 0; i < FInput.SliceCount; i++)
-                {
-                    buffer.Add(FInput[i]);
-                }
-
-                if (FWithRepetition[0])
-                    go = GenerateOption.WithRepetition;
-                else
-                    go = GenerateOption.WithoutRepetition;
-
-                //int lowerIndex = Math.Min(FSubsetElementCount[0], FInput.SliceCount);
-
-                Combinations<T> combinations = new Combinations<T>(buffer, FSubsetElementCount[0], go);
+                int sMax = Math.Max(Math.Max(FInput.SliceCount, FWithRepetition.SliceCount), FSubsetElementCount.SliceCount);
 
                 FOutput.SliceCount = 0;
-                foreach (IList<T> c in combinations)
-                {
-                    FOutput.AddRange(c);
-                }
+                FCount.SliceCount = 0;
 
-                FCount.SliceCount = 1;
-                FCount[0] = (int)combinations.Count;
+                for (int i = 0; i < sMax; i++)
+                {
+                    buffer.Clear();
+
+                    FOutput.SliceCount++;
+
+                    if (FWithRepetition[i])
+                        go = GenerateOption.WithRepetition;
+                    else
+                        go = GenerateOption.WithoutRepetition;
+
+
+                    for (int j = 0; j < FInput[i].SliceCount; j++)
+                    {
+                        buffer.Add(FInput[i][j]);
+                    }
+
+                    Combinations<T> combinations = new Combinations<T>(buffer, FSubsetElementCount[i], go);
+
+                    FCount.Add((int)combinations.Count);
+
+                    FOutput[i].SliceCount = 0;
+                    foreach (IList<T> c in combinations)
+                    {
+                        FOutput[i].AddRange(c);
+                    }
+
+                }
 
             }
         }
@@ -248,30 +272,40 @@ namespace VVVV.Nodes
 
             if (FInput.IsChanged || FSubsetElementCount.IsChanged || FWithRepetition.IsChanged)
             {
-                buffer.Clear();
 
-                for (int i = 0; i < FInput.SliceCount; i++)
-                {
-                    buffer.Add(FInput[i]);
-                }
-
-                if (FWithRepetition[0])
-                    go = GenerateOption.WithRepetition;
-                else
-                    go = GenerateOption.WithoutRepetition;
-
-                //int lowerIndex = Math.Min(FSubsetElementCount[0], FInput.SliceCount);
-
-                Variations<T> variations = new Variations<T>(buffer, FSubsetElementCount[0], go);
+                int sMax = Math.Max(Math.Max(FInput.SliceCount, FWithRepetition.SliceCount), FSubsetElementCount.SliceCount);
 
                 FOutput.SliceCount = 0;
-                foreach (IList<T> v in variations)
-                {
-                    FOutput.AddRange(v);
-                }
+                FCount.SliceCount = 0;
 
-                FCount.SliceCount = 1;
-                FCount[0] = (int)variations.Count;
+                for (int i = 0; i < sMax; i++)
+                {
+                    buffer.Clear();
+
+                    FOutput.SliceCount++;
+
+                    if (FWithRepetition[i])
+                        go = GenerateOption.WithRepetition;
+                    else
+                        go = GenerateOption.WithoutRepetition;
+
+
+                    for (int j = 0; j < FInput[i].SliceCount; j++)
+                    {
+                        buffer.Add(FInput[i][j]);
+                    }
+
+                    Variations<T> variations = new Variations<T>(buffer, FSubsetElementCount[i], go);
+
+                    FCount.Add((int)variations.Count);
+
+                    FOutput[i].SliceCount = 0;
+                    foreach (IList<T> v in variations)
+                    {
+                        FOutput[i].AddRange(v);
+                    }
+
+                }
 
             }
         }
