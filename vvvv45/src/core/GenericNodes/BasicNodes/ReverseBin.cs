@@ -13,9 +13,11 @@ namespace VVVV.Nodes.Generic
 {
 	public class ReverseBin<T> : IPluginEvaluate
 	{
-		#region fields & pins
-		#pragma warning disable 649
-		[Input("Input", CheckIfChanged = true, AutoValidate = false)]
+        #region fields & pins
+        readonly VecBinSpread<T> spread = new VecBinSpread<T>();
+
+        #pragma warning disable 649
+        [Input("Input", CheckIfChanged = true, AutoValidate = false)]
 		IInStream<T> FInput;
 		
 		[Input("Bin Size", DefaultValue = -1, CheckIfChanged = true, AutoValidate = false)]
@@ -35,9 +37,9 @@ namespace VVVV.Nodes.Generic
 			FInput.Sync(); 
 			FBin.Sync();
 			
-			if (FInput.IsChanged || FBin.IsChanged)
+			if (FInput.IsChanged || FBin.IsChanged || FReverse.IsChanged)
 			{
-				VecBinSpread<T> spread = new VecBinSpread<T>(FInput,1,FBin, FReverse.SliceCount);			
+				spread.Sync(FInput,1,FBin, FReverse.SliceCount);			
 	    
 				FOutput.Length = spread.ItemCount;
 				using (var dataWriter = FOutput.GetWriter())

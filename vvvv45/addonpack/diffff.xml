@@ -116,4 +116,28 @@
   <PATCH version="33.3.01">
 	<NODE old="Background (EX9.Layer)" new="Background (EX9)" />
   </PATCH>
+  <PATCH version="33.8.0">
+	<NODE old="Button (3d Mesh Multitouch)">
+		<PIN old="Cursor Transform" new="Pointer Transform" />
+	</NODE>
+	<NODE old="Button (3d Quad Multitouch)">
+		<PIN old="Cursor Transform" new="Pointer Transform" />
+	</NODE>
+  </PATCH>
+  <PATCH version="33.10.0">
+	<NODE old="Occurrence (Vector2D)" new="Occurrence (2d)" />
+	<NODE old="Occurrence (Vector3D)" new="Occurrence (3d)" />
+	<NODE old="Occurrence (Vector4D)" new="Occurrence (4d)" />
+	<NODE old="Camera (Transform Orbit)">
+  	  <PIN old="Inital Distance" olddefault="15" new="Initial Distance" />
+  	</NODE>
+  </PATCH>
+  <PATCH version="34.101.0">  
+    <NODE old="Camera (Transform Orbit)" new="Camera (Transform Orbit Legacy)"></NODE>
+	<NODE old="FourRooms (Transform Viewport)" new="FourRooms (Transform Legacy)"></NODE>
+	<NODE old="PolyLine (2d)" new="PolyLine (2d Legacy)"></NODE>
+  </PATCH>
+  <PATCH version="35.0.0">  
+    <NODE old="TUIODecoder (Network 1.0)" new="TUIODecoder (Network 1.0 Legacy)"></NODE>
+  </PATCH>
 </CONVVVVERTER>

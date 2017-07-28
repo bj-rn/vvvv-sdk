@@ -5,7 +5,7 @@ using VVVV.Utils.Streams;
 
 namespace VVVV.Hosting.IO.Streams
 {
-	class GroupInStream<T> : IInStream<IInStream<T>>//, IDisposable
+	class GroupInStream<T> : IInStream<IInStream<T>>, IIOMultiPin//, IDisposable
 	{
 		private readonly MemoryIOStream<IInStream<T>> FStreams = new MemoryIOStream<IInStream<T>>(2);
 		private readonly List<IIOContainer> FIOContainers = new List<IIOContainer>();
@@ -46,9 +46,9 @@ namespace VVVV.Hosting.IO.Streams
 					IsPinGroup = false,
 					Order = FInputAttribute.Order + FOffsetCounter * 1000 + i,
 					BinOrder = FInputAttribute.Order + FOffsetCounter * 1000 + i,
-					AutoValidate = FInputAttribute.AutoValidate
+					AutoValidate = false
 				};
-				var io = FFactory.CreateIOContainer(typeof(IInStream<T>), attribute);
+				var io = FFactory.CreateIOContainer(typeof(IInStream<T>), attribute, false);
 				FIOContainers.Add(io);
 			}
 			
@@ -84,17 +84,35 @@ namespace VVVV.Hosting.IO.Streams
 		
 		public bool Sync()
 		{
-			IsChanged = false;
+			IsChanged = FStreams.Sync();
 			foreach (var stream in FStreams)
 			{
 				IsChanged |= stream.Sync();
 			}
+            // Acknowledge the change
+            FStreams.Flush();
 			return IsChanged;
 		}
 		
 		public bool IsChanged { get; private set; }
-		
-		public object Clone()
+
+        public IIOContainer BaseContainer
+        {
+            get
+            {
+                return FCountSpread as IIOContainer;
+            }
+        }
+
+        public IIOContainer[] AssociatedContainers
+        {
+            get
+            {
+                return FIOContainers.ToArray();
+            }
+        }
+
+        public object Clone()
 		{
 			throw new NotImplementedException();
 		}

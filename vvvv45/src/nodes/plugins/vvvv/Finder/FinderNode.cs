@@ -56,6 +56,13 @@ namespace VVVV.Nodes.Finder
         {
             // The InitializeComponent() call is required for Windows Forms designer support.
             InitializeComponent();
+
+            //adapt to dpi-scaling
+            using (var g = this.CreateGraphics())
+            {
+                var dpiFactor = g.DpiY / 96.0f;
+                panel1.Height = (int)(FSearchTextBox.Height + 4 * dpiFactor);
+            }
             
             FHDEHost = host;
             FPluginHost = pluginHost;
@@ -133,6 +140,7 @@ namespace VVVV.Nodes.Finder
             // 
             // ModuleCheckBox
             // 
+            this.ModuleCheckBox.AutoSize = true;
             this.ModuleCheckBox.Dock = System.Windows.Forms.DockStyle.Right;
             this.ModuleCheckBox.Location = new System.Drawing.Point(215, 0);
             this.ModuleCheckBox.Name = "ModuleCheckBox";
@@ -184,6 +192,7 @@ namespace VVVV.Nodes.Finder
             // 
             // FinderPluginNode
             // 
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.Controls.Add(this.FHierarchyViewer);
             this.Controls.Add(this.FNodeCountLabel);
@@ -369,10 +378,10 @@ namespace VVVV.Nodes.Finder
             tip += "m\t Modules\n";
             tip += "p\t vvvv Plugins\n";
             tip += "d\t vvvv Dynamic Plugins\n";
+            tip += "v\t VL Plugins\n";
             tip += "x\t Effects\n";
             tip += "f\t Freeframes Plugins\n";
-            tip += "v\t VST Plugins\n";
-            tip += "a\t all Addons\n";
+            tip += "a\t VST Plugins\n";
             tip += "i\t IOBoxes (Pins of Patches/Modules)\n";
             tip += "e\t exposed IOBoxes\n";
             tip += "s\t Send/Receive Nodes\n";

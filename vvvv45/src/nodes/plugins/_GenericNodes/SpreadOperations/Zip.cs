@@ -16,8 +16,8 @@ namespace VVVV.Nodes
 {
     static class ZipInfo 
     { 
-        public const string HELP = "Zips spreads together";
-        public const string TAGS = "spread, join";
+        public const string HELP = "Interleaves all Input spreads.";
+        public const string TAGS = "interleave, join, generic, spreadop";
     }
 
     [PluginInfo(Name = "Zip", Category = "Value", Help = ZipInfo.HELP, Tags = ZipInfo.TAGS)]
@@ -107,13 +107,43 @@ namespace VVVV.Nodes
 	[PluginInfo(Name = "Zip", Category = "Enumerations", Help = ZipInfo.HELP, Tags = ZipInfo.TAGS)]
 	public class EnumZipNode : Zip<EnumEntry>
 	{
-		
-	}
+        string FLastSubType;
+
+        protected override bool Prepare()
+        {
+            var outputPin = FOutputContainer.GetPluginIO() as IPin;
+            var subType = outputPin.GetDownstreamSubType();
+            if (subType != FLastSubType)
+            {
+                FLastSubType = subType;
+                (outputPin as IEnumOut).SetSubType(subType);
+                foreach (var inputPin in FInputContainer.GetPluginIOs().OfType<IEnumIn>())
+                    inputPin.SetSubType(subType);
+                return true;
+            }
+            return base.Prepare();
+        }
+    }
 
     [PluginInfo(Name = "Zip", Category = "Enumerations", Version = "Bin", Help = ZipInfo.HELP, Tags = ZipInfo.TAGS)]
     public class EnumBinSizeZipNode : Zip<IInStream<EnumEntry>>
     {
+        string FLastSubType;
 
+        protected override bool Prepare()
+        {
+            var outputPin = FOutputContainer.GetPluginIO() as IPin;
+            var subType = outputPin.GetDownstreamSubType();
+            if (subType != FLastSubType)
+            {
+                FLastSubType = subType;
+                (outputPin as IEnumOut).SetSubType(subType);
+                foreach (var inputPin in FInputContainer.GetPluginIOs().OfType<IEnumIn>())
+                    inputPin.SetSubType(subType);
+                return true;
+            }
+            return base.Prepare();
+        }
     }
     
     [PluginInfo(Name = "Zip", Category = "Raw", Help = ZipInfo.HELP, Tags = ZipInfo.TAGS)]

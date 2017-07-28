@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 using VVVV.Hosting.Interfaces;
 using VVVV.Hosting.Interfaces.EX9;
 using VVVV.PluginInterfaces.InteropServices.EX9;
@@ -25,6 +26,8 @@ namespace VVVV.Hosting
         void RemoveWindowListener(IWindowListener listener);
         void AddComponentModeListener(IComponentModeListener listener);
         void RemoveComponentModeListener(IComponentModeListener listener);
+        void AddEnumListener(IEnumListener listener);
+        void RemoveEnumListener(IEnumListener listener);
 
         /// <summary>
         /// The graphs root node
@@ -200,10 +203,29 @@ namespace VVVV.Hosting
         /// Enables the short cuts of vvvv.
         /// </summary>
         void EnableShortCuts();
+        
+        /// <summary>
+        /// Reference to the 50 Editor
+        /// </summary>
+        IQueryDelete FiftyEditor
+        {
+            set;
+        }
+
+        /// <summary>
+        /// This is the untweaked frametime. Tweaking frame time is possible via clock nodes or via SetFrameTime / SetFrameTimeProvider
+        /// </summary>
+        double GetOriginalFrameTime();
+
+        /// <summary>
+        /// The given provider gets called by vvvv when it needs to pin down an official frame time for the current frame. 
+        /// By using this you can potenitally reduce latency.
+        /// </summary>
+        void SetTimeProvider(ITimeProvider timeProvider);
     }
-    
+
     #region Listeners
-    
+
     /// <summary>
     /// Listener interface to be informed of a changed node-selection.
     /// </summary>
@@ -256,6 +278,16 @@ namespace VVVV.Hosting
     {
         void WindowSelectionChangeCB(IWindow window);
     }
-    
+
+    /// <summary>
+    /// Listener interface to be informed of a changed Enum.
+    /// </summary>
+    [Guid("D5248C93-C357-4378-A638-A322D14FAFCC"),
+     InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    public interface IEnumListener
+    {
+        void EnumChangeCB(string enumName);
+    }
+
     #endregion Listeners
 }

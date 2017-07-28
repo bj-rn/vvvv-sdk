@@ -17,8 +17,10 @@ namespace VVVV.Nodes.Texture.HTML
         const string CmdAssemblySearchPathSwitch = "assembly-search-path";
 
         // Main entry point when called by CEF
+        [STAThread]
         public static int Main(string[] args)
         {
+            CefRuntime.EnableHighDpiSupport();
             CefRuntime.Load();
 
             var app = new HTMLTextureApp();
@@ -297,6 +299,11 @@ namespace VVVV.Nodes.Texture.HTML
                     return null;
                 };
 
+            }
+            if (string.IsNullOrEmpty(processType))
+            {
+                commandLine.AppendSwitch("disable-smooth-scrolling");
+                commandLine.AppendSwitch("enable-system-flash");
             }
             base.OnBeforeCommandLineProcessing(processType, commandLine);
         }

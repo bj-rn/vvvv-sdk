@@ -13,7 +13,7 @@ namespace VVVV.Hosting.IO.Streams
 {
     public unsafe abstract class UnmanagedOutStream<T> : IOutStream<T>
     {
-        internal abstract class UnmanagedOutWriter : IStreamWriter<T>
+        public abstract class UnmanagedOutWriter : IStreamWriter<T>
         {
             private UnmanagedOutStream<T> FStream;
             
@@ -219,6 +219,104 @@ namespace VVVV.Hosting.IO.Streams
         public override IStreamWriter<float> GetWriter()
         {
             return new FloatOutWriter(this, *FPPDst);
+        }
+    }
+
+    unsafe class ByteOutStream : UnmanagedOutStream<byte>
+    {
+        class ByteOutWriter : UnmanagedOutWriter
+        {
+            private readonly double* FPDst;
+
+            public ByteOutWriter(ByteOutStream stream, double* pDst)
+                : base(stream)
+            {
+                FPDst = pDst;
+            }
+
+            public override void Write(byte value, int stride)
+            {
+                Debug.Assert(!Eos);
+                FPDst[Position] = (double)value;
+                Position += stride;
+            }
+
+            protected override void Copy(byte[] source, int sourceIndex, int length, int stride)
+            {
+                fixed (byte* sourcePtr = source)
+                {
+                    byte* src = sourcePtr + sourceIndex;
+                    double* dst = FPDst + Position;
+
+                    for (int i = 0; i < length; i++)
+                    {
+                        *dst = (double)*(src++);
+                        dst += stride;
+                    }
+                }
+            }
+        }
+
+        private readonly double** FPPDst;
+
+        public ByteOutStream(double** ppDst, Action<int> setDstLengthAction)
+            : base(setDstLengthAction)
+        {
+            FPPDst = ppDst;
+        }
+
+        public override IStreamWriter<byte> GetWriter()
+        {
+            return new ByteOutWriter(this, *FPPDst);
+        }
+    }
+
+    unsafe class SByteOutStream : UnmanagedOutStream<sbyte>
+    {
+        class SByteOutWriter : UnmanagedOutWriter
+        {
+            private readonly double* FPDst;
+
+            public SByteOutWriter(SByteOutStream stream, double* pDst)
+                : base(stream)
+            {
+                FPDst = pDst;
+            }
+
+            public override void Write(sbyte value, int stride)
+            {
+                Debug.Assert(!Eos);
+                FPDst[Position] = (double)value;
+                Position += stride;
+            }
+
+            protected override void Copy(sbyte[] source, int sourceIndex, int length, int stride)
+            {
+                fixed (sbyte* sourcePtr = source)
+                {
+                    sbyte* src = sourcePtr + sourceIndex;
+                    double* dst = FPDst + Position;
+
+                    for (int i = 0; i < length; i++)
+                    {
+                        *dst = (double)*(src++);
+                        dst += stride;
+                    }
+                }
+            }
+        }
+
+        private readonly double** FPPDst;
+
+        public SByteOutStream(double** ppDst, Action<int> setDstLengthAction)
+            : base(setDstLengthAction)
+        {
+            FPPDst = ppDst;
+        }
+
+        public override IStreamWriter<sbyte> GetWriter()
+        {
+            return new SByteOutWriter(this, *FPPDst);
         }
     }
 

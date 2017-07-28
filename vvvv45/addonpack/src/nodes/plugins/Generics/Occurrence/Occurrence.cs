@@ -39,8 +39,8 @@ namespace VVVV.Nodes
 {
 	[PluginInfo(Name = "Occurrence", 
 	            Category = "Value",
-	            Help = "counts the occurrence of equal slices",
-	            Tags = "count, occurrence, spectral, spread",
+	            Help = "Counts the occurrence of equal slices",
+	            Tags = "count, spectral, spread",
 	           	Author = "woei")]
 	public class OccurrenceValue: Occurrence<double>
 	{
@@ -59,11 +59,86 @@ namespace VVVV.Nodes
 			base.Evaluate(SpreadMax);
 		} 
 	}
+
+    [PluginInfo(Name = "Occurrence",
+                Category = "2d",
+                Help = "Counts the occurrence of equal slices",
+                Tags = "count, spectral, spread",
+                Author = "woei")]
+    public class OccurrenceVector2D : Occurrence<Vector2D>
+    {
+        [Input("Epsilon", IsSingle = true, MinValue = 0, Order = 1)]
+        IDiffSpread<Vector2D> FEps;
+
+        public override bool Equals(Vector2D a, Vector2D b)
+        {
+            return  (a.x >= b.x - FEps[0].x && a.x <= b.x + FEps[0].x) &&
+                    (a.y >= b.y - FEps[0].y && a.y <= b.y + FEps[0].y);
+        }
+
+        public override void Evaluate(int SpreadMax)
+        {
+            if (FEps.IsChanged)
+                eval = true;
+            base.Evaluate(SpreadMax);
+        }
+    }
+
+    [PluginInfo(Name = "Occurrence",
+                Category = "3d",
+                Help = "Counts the occurrence of equal slices",
+                Tags = "count, spectral, spread",
+                Author = "woei")]
+    public class OccurrenceVector3D : Occurrence<Vector3D>
+    {
+        [Input("Epsilon", IsSingle = true, MinValue = 0, Order = 1)]
+        IDiffSpread<Vector3D> FEps;
+
+        public override bool Equals(Vector3D a, Vector3D b)
+        {
+            return  (a.x >= b.x - FEps[0].x && a.x <= b.x + FEps[0].x) &&
+                    (a.y >= b.y - FEps[0].y && a.y <= b.y + FEps[0].y) &&
+                    (a.z >= b.z - FEps[0].z && a.z <= b.z + FEps[0].z);
+        }
+
+        public override void Evaluate(int SpreadMax)
+        {
+            if (FEps.IsChanged)
+                eval = true;
+            base.Evaluate(SpreadMax);
+        }
+    }
+
+    [PluginInfo(Name = "Occurrence",
+                Category = "4d",
+                Help = "Counts the occurrence of equal slices",
+                Tags = "count, spectral, spread",
+                Author = "woei")]
+    public class OccurrenceVector4D : Occurrence<Vector4D>
+    {
+        [Input("Epsilon", IsSingle = true, MinValue = 0, Order = 1)]
+        IDiffSpread<Vector4D> FEps;
+
+        public override bool Equals(Vector4D a, Vector4D b)
+        {
+            return  (a.x >= b.x - FEps[0].x && a.x <= b.x + FEps[0].x) &&
+                    (a.y >= b.y - FEps[0].y && a.y <= b.y + FEps[0].y) &&
+                    (a.z >= b.z - FEps[0].z && a.z <= b.z + FEps[0].z) &&
+                    (a.w >= b.w - FEps[0].w && a.w <= b.w + FEps[0].w);
+        }
+
+        public override void Evaluate(int SpreadMax)
+        {
+            if (FEps.IsChanged)
+                eval = true;
+            base.Evaluate(SpreadMax);
+        }
+    }
 	
 	[PluginInfo(Name = "Occurrence", 
 	            Category = "String",
-	            Help = "counts the occurrence of equal slices",
-	            Tags = "count, occurrence, spectral, spread",
+	            Help = "Counts the occurrence of equal slices",
+	            Tags = "count, spectral, spread",
 	           	Author = "woei")]
 	public class OccurrenceString: Occurrence<string>
 	{
@@ -92,8 +167,8 @@ namespace VVVV.Nodes
 	
 	[PluginInfo(Name = "Occurrence", 
 	            Category = "Color",
-	            Help = "counts the occurrence of equal slices",
-	            Tags = "count, occurrence, spectral, spread",
+	            Help = "Counts the occurrence of equal slices",
+	            Tags = "count, spectral, spread",
 	           	Author = "woei")]
 	public class OccurrenceColor: Occurrence<RGBAColor>
 	{
@@ -118,15 +193,15 @@ namespace VVVV.Nodes
 	
 	[PluginInfo(Name = "Occurrence", 
 	            Category = "Enumerations",
-	            Help = "counts the occurrence of equal slices",
-	            Tags = "count, occurrence, spectral, spread",
+	            Help = "Counts the occurrence of equal slices",
+	            Tags = "count, spectral, spread",
 	           	Author = "woei")]
 	public class OccurrenceEnum: Occurrence<EnumEntry> {}
 	
 	[PluginInfo(Name = "Occurrence", 
 	            Category = "Transform",
-	            Help = "counts the occurrence of equal slices",
-	            Tags = "count, occurrence, spectral, spread",
+	            Help = "Counts the occurrence of equal slices",
+	            Tags = "count, spectral, spread",
 	           	Author = "woei")]
 	public class OccurrenceTransform: Occurrence<Matrix4x4> {}
 }

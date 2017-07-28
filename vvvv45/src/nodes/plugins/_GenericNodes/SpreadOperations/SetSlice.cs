@@ -16,7 +16,7 @@ namespace VVVV.Nodes
 	#region PluginInfo
 	[PluginInfo(Name = "SetSlice",
 	            Category = "Transform",
-	            Help = "Replace individual slices of the spread with the given input",
+	            Help = "Replaces slices in the Spread that are addressed by the Index pin, with the given Input.",
 	            Tags = "",
 	            Author = "woei")]
 	#endregion PluginInfo
@@ -25,16 +25,32 @@ namespace VVVV.Nodes
 	#region PluginInfo
 	[PluginInfo(Name = "SetSlice",
 	            Category = "Enumerations",
-	            Help = "Replace individual slices of the spread with the given input",
+	            Help = "Replaces slices in the Spread that are addressed by the Index pin, with the given Input.",
 	            Tags = "",
 	            Author = "woei")]
 	#endregion PluginInfo
-	public class SetSliceEnum : SetSlice<EnumEntry> {}
+	public class SetSliceEnum : SetSlice<EnumEntry>
+    {
+        string FLastSubType;
+
+        protected override void Prepare()
+        {
+            var outputPin = FOutputContainer.GetPluginIO() as IPin;
+            var subType = outputPin.GetDownstreamSubType();
+            if (subType != FLastSubType)
+            {
+                FLastSubType = subType;
+                (outputPin as IEnumOut).SetSubType(subType);
+                (FSpreadContainer.GetPluginIO() as IEnumIn).SetSubType(subType);
+                (FInputContainer.GetPluginIO() as IEnumIn).SetSubType(subType);
+            }
+        }
+    }
 	
 	#region PluginInfo
 	[PluginInfo(Name = "SetSlice",
 	            Category = "Raw",
-	            Help = "Replace individual slices of the spread with the given input",
+	            Help = "Replaces slices in the Spread that are addressed by the Index pin, with the given Input.",
 	            Tags = "",
 	            Author = "woei")]
 	#endregion PluginInfo

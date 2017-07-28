@@ -29,10 +29,13 @@ namespace VVVV.Nodes.Texture.HTML
         public const string DEFAULT_CONTENT = @"<html><head></head><body bgcolor=""#ffffff""></body></html>";
         public const int DEFAULT_WIDTH = 640;
         public const int DEFAULT_HEIGHT = 480;
+        public const int MIN_FRAME_RATE = 1;
+        public const int MAX_FRAME_RATE = 60;
 
         private volatile bool FEnabled;
         private readonly WebClient FWebClient;
         private CefBrowser FBrowser;
+        private CefRequestContext FRequestContext;
         private CefBrowserHost FBrowserHost;
         private string FUrl;
         private string FHtml;
@@ -45,25 +48,50 @@ namespace VVVV.Nodes.Texture.HTML
         private readonly AutoResetEvent FBrowserAttachedEvent = new AutoResetEvent(false);
         private readonly AutoResetEvent FBrowserDetachedEvent = new AutoResetEvent(false);
 
-        public HTMLTextureRenderer(ILogger logger)
+        /// <summary>
+        /// Create a new texture renderer.
+        /// </summary>
+        /// <param name="logger">The logger to log to.</param>
+        /// <param name="frameRate">
+        /// The maximum rate in frames per second (fps) that CefRenderHandler::OnPaint will
+        /// be called for a windowless browser. The actual fps may be lower if the browser
+        /// cannot generate frames at the requested rate. The minimum value is 1 and the 
+        /// maximum value is 60 (default 30).
+        /// </param>
+        public HTMLTextureRenderer(ILogger logger, int frameRate)
         {
             Logger = logger;
+            FrameRate = VMath.Clamp(frameRate, MIN_FRAME_RATE, MAX_FRAME_RATE);
+
+            FLoaded = false;
 
             var settings = new CefBrowserSettings();
-            settings.AcceleratedCompositing = CefState.Enabled;
             settings.FileAccessFromFileUrls = CefState.Enabled;
+            settings.Plugins = CefState.Enabled;
+            settings.RemoteFonts = CefState.Enabled;
             settings.UniversalAccessFromFileUrls = CefState.Enabled;
+            settings.WebGL = CefState.Enabled;
+            settings.WebSecurity = CefState.Disabled;
+            settings.WindowlessFrameRate = frameRate;
 
             var windowInfo = CefWindowInfo.Create();
-            windowInfo.TransparentPainting = true;
-            windowInfo.SetAsOffScreen(IntPtr.Zero);
+            windowInfo.SetAsWindowless(IntPtr.Zero, true);
 
             FWebClient = new WebClient(this);
             // See http://magpcss.org/ceforum/viewtopic.php?f=6&t=5901
-            CefBrowserHost.CreateBrowser(windowInfo, FWebClient, settings);
+            // We need to maintain different request contexts in order to have different zoom levels
+            // See https://bitbucket.org/chromiumembedded/cef/issues/1314
+            var rcSettings = new CefRequestContextSettings()
+            {
+                IgnoreCertificateErrors = true
+            };
+            FRequestContext = CefRequestContext.CreateContext(rcSettings, new WebClient.RequestContextHandler());
+            CefBrowserHost.CreateBrowser(windowInfo, FWebClient, settings, FRequestContext);
             // Block until browser is created
             FBrowserAttachedEvent.WaitOne();
         }
+
+        public int FrameRate { get; private set; }
 
         internal void Attach(CefBrowser browser)
         {
@@ -85,6 +113,7 @@ namespace VVVV.Nodes.Texture.HTML
             FBrowserDetachedEvent.WaitOne();
             FBrowserAttachedEvent.Dispose();
             FBrowserDetachedEvent.Dispose();
+            FRequestContext.Dispose();
             if (FMouseSubscription != null)
             {
                 FMouseSubscription.Dispose();
@@ -151,6 +180,7 @@ namespace VVVV.Nodes.Texture.HTML
 
         private void Reset()
         {
+            FLoaded = false;
             FDocumentSizeIsValid = false;
             FDomIsValid = false;
             FErrorText = string.Empty;
@@ -225,7 +255,7 @@ namespace VVVV.Nodes.Texture.HTML
                                 FTextures[i] = FTextures[i].Update(newSize);
                     }
                     FBrowserHost.WasResized();
-                    FBrowserHost.Invalidate(new CefRectangle(0, 0, newSize.Width, newSize.Height), CefPaintElementType.View);
+                    FBrowserHost.Invalidate(CefPaintElementType.View);
                 }
             }
         }
@@ -487,7 +517,21 @@ namespace VVVV.Nodes.Texture.HTML
         private bool FIsLoading;
         public bool IsLoading
         {
-            get { return FIsLoading || !FDomIsValid || (IsAutoSize && !FDocumentSizeIsValid) || FTextures.Any(t => !t.IsValid); }
+            get
+            {
+                if (FIsLoading || !FDomIsValid || (IsAutoSize && !FDocumentSizeIsValid))
+                    return true;
+                lock (FTextures)
+                {
+                    return FTextures.Any(t => !t.IsValid);
+                }
+            }
+        }
+
+        private bool FLoaded;
+        public bool Loaded
+        {
+            get { return FLoaded; }
         }
 
         public bool Enabled
@@ -506,7 +550,7 @@ namespace VVVV.Nodes.Texture.HTML
                     if (FEnabled)
                     {
                         FBrowserHost.WasHidden(false);
-                        FBrowserHost.Invalidate(new CefRectangle(0, 0, Size.Width, Size.Height), CefPaintElementType.View);
+                        FBrowserHost.Invalidate(CefPaintElementType.View);
                     }
                 }
             }
@@ -533,6 +577,9 @@ namespace VVVV.Nodes.Texture.HTML
                     UpdateDom(frame);
                     UpdateDocumentSize();
                 }
+                FLoaded = true;
+                // HACK: Re-apply zooming level :/ - https://vvvv.org/forum/htmltexture-bug-with-zoomlevel
+                FBrowserHost.SetZoomLevel(ZoomLevel);
             }
             else
                 // Reset computed values like document size or DOM
@@ -541,7 +588,7 @@ namespace VVVV.Nodes.Texture.HTML
 
         private readonly List<DoubleBufferedTexture> FTextures = new List<DoubleBufferedTexture>();
 
-        internal void Paint(CefRectangle[] cefRects, IntPtr buffer, int stride)
+        internal void Paint(CefRectangle[] cefRects, IntPtr buffer, int stride, int width, int height)
         {
             // Do nothing if disabled
             if (!FEnabled) return;
@@ -580,7 +627,7 @@ namespace VVVV.Nodes.Texture.HTML
                         var texture = new DoubleBufferedTexture(device, size);
                         FTextures.Add(texture);
                         // Trigger a redraw
-                        FBrowserHost.Invalidate(new CefRectangle(0, 0, size.Width, size.Height), CefPaintElementType.View);
+                        FBrowserHost.Invalidate(CefPaintElementType.View);
                     }
                 }
                 // Tell all textures to update - in case the size is not valid
@@ -593,7 +640,7 @@ namespace VVVV.Nodes.Texture.HTML
                         var newTexture = texture.Update(size);
                         // If the "new" texture is in a degraded state trigger a redraw
                         if (newTexture != texture && newTexture.IsDegraded)
-                            FBrowserHost.Invalidate(new CefRectangle(0, 0, size.Width, size.Height), CefPaintElementType.View);
+                            FBrowserHost.Invalidate(CefPaintElementType.View);
                         FTextures[i] = newTexture;
                     }
                 }
@@ -602,11 +649,14 @@ namespace VVVV.Nodes.Texture.HTML
 
         internal EX9.Texture GetTexture(Device device)
         {
-            var texture = FTextures.FirstOrDefault(t => t.Device == device);
-            if (texture != null)
-                return texture.LastCompleteTexture;
-            else
-                return null;
+            lock (FTextures)
+            {
+                var texture = FTextures.FirstOrDefault(t => t.Device == device);
+                if (texture != null)
+                    return texture.LastCompleteTexture;
+                else
+                    return null;
+            }
         }
 
         internal void DestroyResources(Device device)

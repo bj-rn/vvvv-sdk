@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
-  <Import Project="..\..\..\..\packages\VVVV.SlimDX.1.0.1\build\net40\VVVV.SlimDX.props" Condition="Exists('..\..\..\..\packages\VVVV.SlimDX.1.0.1\build\net40\VVVV.SlimDX.props')" />
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <Import Project="..\..\..\..\packages\VVVV.SlimDX.1.0.2\build\net40\VVVV.SlimDX.props" Condition="Exists('..\..\..\..\packages\VVVV.SlimDX.1.0.2\build\net40\VVVV.SlimDX.props')" />
   <Import Project="Default.Plugin.Project.settings" />
   <PropertyGroup>
     <ProjectGuid>{716F4773-5590-4DD6-A9BC-3FE905D22DA5}</ProjectGuid>
@@ -10,37 +10,48 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <RestorePackages>true</RestorePackages>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Commons.Xml.Relaxng">
-      <HintPath>..\..\..\..\common\src\thirdparty\Commons.Xml.Relaxng.dll</HintPath>
+    <Reference Include="Commons.Xml.Relaxng, Version=4.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\packages\RelaxNG.3.2.3\lib\net40\Commons.Xml.Relaxng.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Gma.QrCodeNet.Encoding">
-      <HintPath>..\..\..\..\common\src\thirdparty\Gma.QrCodeNet.Encoding.dll</HintPath>
+      <HintPath>..\..\..\..\packages\QrCode.Net.0.4.0.0\lib\net45\Gma.QrCodeNet.Encoding.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.Practices.Unity">
-      <HintPath>..\..\..\..\common\src\thirdparty\Microsoft.Practices.Unity.dll</HintPath>
+    <Reference Include="ParallelExtensionsExtras, Version=1.2.3.0, Culture=neutral, PublicKeyToken=665f4d61f853b5a9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\packages\ParallelExtensionsExtras.1.2.0.0\lib\net40\ParallelExtensionsExtras.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="ParallelExtensionsExtras">
-      <HintPath>..\..\..\..\common\src\thirdparty\ParallelExtensionsExtras.dll</HintPath>
+    <Reference Include="SharpDX, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\packages\SharpDX.4.0.1\lib\net45\SharpDX.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="SharpDX, Version=2.5.0.0, Culture=neutral, PublicKeyToken=627a3d6d1956f55a, processorArchitecture=MSIL">
-      <HintPath>..\..\..\..\packages\SharpDX.2.5.0\lib\net40\SharpDX.dll</HintPath>
+    <Reference Include="SharpDX.Direct2D1, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\packages\SharpDX.Direct2D1.4.0.1\lib\net45\SharpDX.Direct2D1.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="SharpDX.Direct2D1, Version=2.5.0.0, Culture=neutral, PublicKeyToken=627a3d6d1956f55a, processorArchitecture=MSIL">
-      <HintPath>..\..\..\..\packages\SharpDX.Direct2D1.2.5.0\lib\net40\SharpDX.Direct2D1.dll</HintPath>
+    <Reference Include="SharpDX.Direct3D9, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\packages\SharpDX.Direct3D9.4.0.1\lib\net45\SharpDX.Direct3D9.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="SharpDX.Direct3D9, Version=2.5.0.0, Culture=neutral, PublicKeyToken=627a3d6d1956f55a, processorArchitecture=MSIL">
-      <HintPath>..\..\..\..\packages\SharpDX.Direct3D9.2.5.0\lib\net40\SharpDX.Direct3D9.dll</HintPath>
+    <Reference Include="SharpDX.DXGI, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\packages\SharpDX.DXGI.4.0.1\lib\net45\SharpDX.DXGI.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="SharpDX.DXGI">
-      <HintPath>..\..\..\..\packages\SharpDX.DXGI.2.5.0\lib\net40\SharpDX.DXGI.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.RawInput, Version=2.5.0.0, Culture=neutral, PublicKeyToken=627a3d6d1956f55a, processorArchitecture=MSIL">
-      <HintPath>..\..\..\..\packages\SharpDX.RawInput.2.5.0\lib\net40\SharpDX.RawInput.dll</HintPath>
-    </Reference>
-    <Reference Include="SlimDX">
-      <HintPath>..\..\..\..\common\src\thirdparty\$(Platform)\SlimDX.dll</HintPath>
+    <Reference Include="SharpDX.RawInput, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\packages\SharpDX.RawInput.4.0.1\lib\net45\SharpDX.RawInput.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Svg">
       <HintPath>..\..\..\..\common\src\thirdparty\Svg.dll</HintPath>
@@ -53,23 +64,25 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Interactive, Version=1.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\..\..\packages\Ix-Main.1.2.2\lib\net40\System.Interactive.dll</HintPath>
+      <HintPath>..\..\..\..\packages\Ix-Main.1.2.5\lib\net45\System.Interactive.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Management" />
     <Reference Include="System.Reactive.Core">
-      <HintPath>..\..\..\..\common\src\thirdparty\Rx\System.Reactive.Core.dll</HintPath>
+      <HintPath>..\..\..\..\packages\Rx-Core.2.2.5\lib\net40\System.Reactive.Core.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive.Interfaces">
-      <HintPath>..\..\..\..\common\src\thirdparty\Rx\System.Reactive.Interfaces.dll</HintPath>
+      <HintPath>..\..\..\..\packages\Rx-Interfaces.2.2.5\lib\net40\System.Reactive.Interfaces.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive.Linq">
-      <HintPath>..\..\..\..\common\src\thirdparty\Rx\System.Reactive.Linq.dll</HintPath>
+      <HintPath>..\..\..\..\packages\Rx-Linq.2.2.5\lib\net40\System.Reactive.Linq.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive.PlatformServices">
-      <HintPath>..\..\..\..\common\src\thirdparty\Rx\System.Reactive.PlatformServices.dll</HintPath>
+      <HintPath>..\..\..\..\packages\Rx-PlatformServices.2.2.5\lib\net40\System.Reactive.PlatformServices.dll</HintPath>
     </Reference>
-    <Reference Include="System.Threading.Tasks.Dataflow">
-      <HintPath>..\..\..\..\common\src\thirdparty\System.Threading.Tasks.Dataflow.dll</HintPath>
+    <Reference Include="System.Threading.Tasks.Dataflow, Version=4.5.24.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\..\..\packages\Microsoft.Tpl.Dataflow.4.5.24\lib\portable-net45+win8+wpa81\System.Threading.Tasks.Dataflow.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Web" />
     <Reference Include="System.Windows.Forms" />
@@ -80,6 +93,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="2d\ClippingEar\C2dClippingEarNode.cs" />
+    <Compile Include="2d\ClippingEar\Polygon.cs" />
+    <Compile Include="2d\ClippingEar\Triangulation2D.cs" />
     <Compile Include="2d\TreemapNode.cs" />
     <Compile Include="Animation\OneEuroFilter\OneEuroFilterNode.cs" />
     <Compile Include="Animation\ParticlesThreaded\Particle.cs" />
@@ -87,6 +103,24 @@
     <Compile Include="Animation\ParticlesThreaded\ParticleSystemNode.cs" />
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Devices\RS232Node.cs" />
+    <Compile Include="GlobalEnums.cs" />
+    <Compile Include="Spreads\VectorSized\AddVectorNode.cs" />
+    <Compile Include="Spreads\VectorSized\BoundsVectorNode.cs" />
+    <Compile Include="Spreads\VectorSized\CARVectorNode.cs" />
+    <Compile Include="Spreads\VectorSized\CDRVectorNode.cs" />
+    <Compile Include="Spreads\VectorSized\ConnectNode.cs" />
+    <Compile Include="Spreads\VectorSized\DiffVectorNode.cs" />
+    <Compile Include="Spreads\VectorSized\IntVectorNode.cs" />
+    <Compile Include="Spreads\VectorSized\legacy\CrossAdvNode.cs" />
+    <Compile Include="Spreads\VectorSized\legacy\VecBin.cs" />
+    <Compile Include="Spreads\VectorSized\MeanVectorNode.cs" />
+    <Compile Include="Spreads\VectorSized\MultiplyVectorNode.cs" />
+    <Compile Include="Spreads\VectorSized\ReverseVectorNode.cs" />
+    <Compile Include="Spreads\VectorSized\SelectVectorNode.cs" />
+    <Compile Include="Spreads\VectorSized\ShiftVectorNode.cs" />
+    <Compile Include="String\MakePath.cs" />
+    <Compile Include="vvvv\Kontrolleur\SetExposedPinsNode.cs" />
+    <Compile Include="Windows\ScreenRecorderNode.cs" />
     <Compile Include="Layer\DrawText\DrawText.cs" />
     <Compile Include="Layer\DrawText\DrawTextLegacy.cs" />
     <Compile Include="Network\Clock.cs" />
@@ -108,6 +142,7 @@
     <Compile Include="Raw\TriDESNodes.cs" />
     <Compile Include="Spreads\Lindenmayer\Lindenmayer.cs" />
     <Compile Include="Spreads\Lindenmayer\LindenmayerNode.cs" />
+    <Compile Include="String\AdvancedStringCleanNode.cs" />
     <Compile Include="String\ApplyModifiersNode.cs" />
     <Compile Include="String\Base64Nodes.cs" />
     <Compile Include="String\EnumEntries2String.cs" />
@@ -118,14 +153,17 @@
     <Compile Include="String\URLCoding.cs" />
     <Compile Include="SVG\SVGGeomNodes.cs" />
     <Compile Include="SVG\SVGGroupNode.cs" />
-    <Compile Include="SVG\SvgRendererNode.cs" />
-    <Compile Include="SVG\SVGTextureNode.cs">
+    <Compile Include="SVG\SvgRendererNode.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="SVG\SVGTextureNode.cs" />
     <Compile Include="System\DeviceComparer.cs" />
     <Compile Include="System\DesktopDeviceInputNode.cs" />
+    <Compile Include="System\GestureNodes.cs" />
     <Compile Include="System\SendMouseNode.cs" />
     <Compile Include="System\SendKeyboardNode.cs" />
+    <Compile Include="System\SpoutNodes.cs" />
+    <Compile Include="System\SpoutSender.cs" />
     <Compile Include="System\TouchNodes.cs" />
     <Compile Include="System\Legacy\DeltaMouse.cs" />
     <Compile Include="System\Legacy\GlobalInputNode.cs" />
@@ -158,6 +196,7 @@
     <Compile Include="Value\AsRawNode.cs" />
     <Compile Include="Value\DifferentialNode.cs" />
     <Compile Include="Value\IntegralNode.cs" />
+    <Compile Include="Value\SpecialNumbers.cs" />
     <Compile Include="vvvv\Architecture\VVVVArchitectureNode.cs" />
     <Compile Include="vvvv\Finder\Enums.cs" />
     <Compile Include="vvvv\Finder\FinderNode.cs">
@@ -233,6 +272,10 @@
     <Compile Include="vvvv\WindowSwitcher\WindowSwitcherNode.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="Windows\WindowBounds\GetWindowBoundsClientNode.cs" />
+    <Compile Include="Windows\WindowBounds\GetWindowBoundsNode.cs" />
+    <Compile Include="Windows\WindowBounds\SetWindowBoundsClientNode.cs" />
+    <Compile Include="Windows\WindowBounds\SetWindowBoundsNode.cs" />
     <Compile Include="Windows\WindowsKill\WindowsKillNode.cs" />
     <Compile Include="XML\BasicNodesXAttribute.cs" />
     <Compile Include="XML\BasicNodesXDocument.cs" />
@@ -247,18 +290,24 @@
     <Compile Include="XML\XMLNodeWrappers.cs" />
     <Compile Include="XML\XMLPruneLegacyNode.cs" />
     <Compile Include="XML\XMLPruneNode.cs" />
+    <Compile Include="_GenericNodes\Copiers.cs" />
     <Compile Include="_GenericNodes\SpreadOperations\Buffer.cs" />
     <Compile Include="_GenericNodes\SpreadOperations\Cons.cs" />
     <Compile Include="_GenericNodes\FrameDelayNode.cs" />
+    <Compile Include="_GenericNodes\SpreadOperations\GetSpreadAdv.cs" />
     <Compile Include="_GenericNodes\SpreadOperations\Pairwise.cs" />
     <Compile Include="_GenericNodes\SpreadOperations\Queue.cs" />
     <Compile Include="_GenericNodes\SpreadOperations\DeleteSlice.cs" />
     <Compile Include="_GenericNodes\SpreadOperations\RingBuffer.cs" />
     <Compile Include="_GenericNodes\SpreadOperations\Select.cs" />
+    <Compile Include="_GenericNodes\SpreadOperations\SelectBin.cs" />
+    <Compile Include="_GenericNodes\SpreadOperations\GetSlice.cs" />
     <Compile Include="_GenericNodes\SpreadOperations\SetSlice.cs" />
+    <Compile Include="_GenericNodes\SpreadOperations\SetSpread.cs" />
     <Compile Include="_GenericNodes\SpreadOperations\SplitAt.cs" />
     <Compile Include="_GenericNodes\SpreadOperations\Unzip.cs" />
     <Compile Include="_GenericNodes\SpreadOperations\Zip.cs" />
+    <Compile Include="_GenericNodes\SpreadOperations\_Utils.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="vvvv\Finder\FinderNode.resx">
@@ -293,6 +342,7 @@
     <ProjectReference Include="..\..\..\..\common\src\core\Core\Core.csproj">
       <Project>{6AD35106-187B-4A3A-A801-E665CD12E020}</Project>
       <Name>Core %28core\Core%29</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\common\src\core\Utils\Utils.csproj">
       <Project>{C3773330-81FA-4253-823E-1BDE1529AA99}</Project>
@@ -326,10 +376,13 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Animation\OneEuroFilter" />
-    <Folder Include="vvvv\Architecture" />
-  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
-  <Import Project="..\..\..\..\packages\VVVV.SlimDX.1.0.1\build\net40\VVVV.SlimDX.targets" Condition="Exists('..\..\..\..\packages\VVVV.SlimDX.1.0.1\build\net40\VVVV.SlimDX.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\..\..\..\packages\VVVV.SlimDX.1.0.2\build\net40\VVVV.SlimDX.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\..\packages\VVVV.SlimDX.1.0.2\build\net40\VVVV.SlimDX.props'))" />
+    <Error Condition="!Exists('..\..\..\..\packages\VVVV.SlimDX.1.0.2\build\net40\VVVV.SlimDX.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\..\packages\VVVV.SlimDX.1.0.2\build\net40\VVVV.SlimDX.targets'))" />
+  </Target>
+  <Import Project="..\..\..\..\packages\VVVV.SlimDX.1.0.2\build\net40\VVVV.SlimDX.targets" Condition="Exists('..\..\..\..\packages\VVVV.SlimDX.1.0.2\build\net40\VVVV.SlimDX.targets')" />
 </Project>

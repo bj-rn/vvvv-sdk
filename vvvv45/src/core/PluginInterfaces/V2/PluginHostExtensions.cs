@@ -38,6 +38,11 @@ namespace VVVV.PluginInterfaces.V2
 			{ typeof(Vector4D), Tuple.Create(double.MinValue, double.MaxValue, 0.01, false, 4) },
 			{ typeof(Matrix4x4), Tuple.Create(double.MinValue, double.MaxValue, 0.01, false, 1) },
 		};
+
+        public static void RegisterPinAttributeConfigForType(Type type, double minValue, double maxValue, double stepSize, bool isInteger, int dimensions)
+        {
+            FDefaultValues.Add(type, Tuple.Create(minValue, maxValue, stepSize, isInteger, dimensions));
+        }
 		
 		private static T NormalizePinAttribute<T>(T attribute, Type type) where T : IOAttribute
 		{
@@ -198,7 +203,9 @@ namespace VVVV.PluginInterfaces.V2
 		
 		public static IStringConfig CreateStringConfig(this IPluginHost host, ConfigAttribute attribute, Type type)
 		{
-			IStringConfig result = null;
+            if (type == typeof(char))
+                attribute.MaxChars = 1;
+            IStringConfig result = null;
 			host.CreateStringConfig(attribute.Name, (TSliceMode) attribute.SliceMode, (TPinVisibility) attribute.Visibility, out result);
 			result.SetSubType2(attribute.DefaultString, attribute.MaxChars, attribute.FileMask, (TStringType) attribute.StringType);
 			result.Order = attribute.Order;
@@ -207,7 +214,9 @@ namespace VVVV.PluginInterfaces.V2
 		
 		public static IStringIn CreateStringInput(this IPluginHost host, InputAttribute attribute, Type type)
 		{
-			IStringIn result = null;
+            if (type == typeof(char))
+                attribute.MaxChars = 1;
+            IStringIn result = null;
 			host.CreateStringInput(attribute.Name, (TSliceMode) attribute.SliceMode, (TPinVisibility) attribute.Visibility, out result);
 			result.SetSubType2(attribute.DefaultString, attribute.MaxChars, attribute.FileMask, (TStringType) attribute.StringType);
             SetInputProperties(result, attribute);
@@ -216,7 +225,9 @@ namespace VVVV.PluginInterfaces.V2
 		
 		public static IStringOut CreateStringOutput(this IPluginHost host, OutputAttribute attribute, Type type)
 		{
-			IStringOut result = null;
+            if (type == typeof(char))
+                attribute.MaxChars = 1;
+            IStringOut result = null;
 			host.CreateStringOutput(attribute.Name, (TSliceMode) attribute.SliceMode, (TPinVisibility) attribute.Visibility, out result);
 			result.SetSubType2(attribute.DefaultString, attribute.MaxChars, attribute.FileMask, (TStringType) attribute.StringType);
             SetOutputProperties(result, attribute);
@@ -252,49 +263,61 @@ namespace VVVV.PluginInterfaces.V2
 		
 		public static IEnumConfig CreateEnumConfig(this IPluginHost host, ConfigAttribute attribute, Type type)
 		{
+		    //this creates and sets the default for a .NET enum
 			if (!typeof(EnumEntry).IsAssignableFrom(type))
 			{
 				var entries = Enum.GetNames(type);
-				var defEntry = !string.IsNullOrEmpty(attribute.DefaultEnumEntry) ? attribute.DefaultEnumEntry : entries[0];
-				host.UpdateEnum(type.FullName, defEntry, entries);
+				host.UpdateEnum(type.FullName, entries[0], entries);
 			}
 			
 			IEnumConfig result = null;
 			host.CreateEnumConfig(attribute.Name, (TSliceMode)attribute.SliceMode, (TPinVisibility)attribute.Visibility, out result);
+						
+			if(!string.IsNullOrWhiteSpace(attribute.DefaultEnumEntry))
+                result.SetDefaultEntry(attribute.DefaultEnumEntry);
+			
 			if (!typeof(EnumEntry).IsAssignableFrom(type))
 				result.SetSubType(type.FullName);
 			else
 				result.SetSubType(attribute.EnumName);
 			result.Order = attribute.Order;
+
 			return result;
 		}
 		
 		public static IEnumIn CreateEnumInput(this IPluginHost host, InputAttribute attribute, Type type)
 		{
+			//this creates and sets the default for a .NET enum
 			if (!typeof(EnumEntry).IsAssignableFrom(type))
 			{
 				var entries = Enum.GetNames(type);
-				var defEntry = !string.IsNullOrEmpty(attribute.DefaultEnumEntry) ? attribute.DefaultEnumEntry : entries[0];
-				host.UpdateEnum(type.FullName, defEntry, entries);
+				host.UpdateEnum(type.FullName, entries[0], entries);
 			}
-			
+
 			IEnumIn result = null;
 			host.CreateEnumInput(attribute.Name, (TSliceMode)attribute.SliceMode, (TPinVisibility)attribute.Visibility, out result);
+			
+			if(!string.IsNullOrWhiteSpace(attribute.DefaultEnumEntry))
+                result.SetDefaultEntry(attribute.DefaultEnumEntry);
+			
 			if (!typeof(EnumEntry).IsAssignableFrom(type))
 				result.SetSubType(type.FullName);
 			else
 				result.SetSubType(attribute.EnumName);
+			
             SetInputProperties(result, attribute);
-			return result;
+
+            return result;
 		}
 		
 		public static IEnumOut CreateEnumOutput(this IPluginHost host, OutputAttribute attribute, Type type)
 		{
+		    
+		    //this creates and sets the default for a .NET enum
 			if (!typeof(EnumEntry).IsAssignableFrom(type))
 			{
 				var entries = Enum.GetNames(type);
-				var defEntry = !string.IsNullOrEmpty(attribute.DefaultEnumEntry) ? attribute.DefaultEnumEntry : entries[0];
-				host.UpdateEnum(type.FullName, defEntry, entries);
+				host.UpdateEnum(type.FullName, entries[0], entries);
 			}
 			
 			IEnumOut result = null;
@@ -302,7 +325,8 @@ namespace VVVV.PluginInterfaces.V2
 			if (!typeof(EnumEntry).IsAssignableFrom(type))
 				result.SetSubType(type.FullName);
 			else
-				result.SetSubType(attribute.EnumName);
+				result.SetSubType(attribute.EnumName);		
+			
             SetOutputProperties(result, attribute);
 			return result;
 		}
@@ -327,7 +351,10 @@ namespace VVVV.PluginInterfaces.V2
 		{
 			INodeIn result = null;
 			host.CreateNodeInput(attribute.Name, (TSliceMode) attribute.SliceMode, (TPinVisibility) attribute.Visibility, out result);
-			result.SetSubType2(type, new Guid[] { type.GUID }, type.GetCSharpName());
+            if (type != null)
+                result.SetSubType2(type, new Guid[] { type.GUID }, type.GetCSharpName());
+            else
+                result.SetSubType(new Guid[] { }, "Variant");
             SetInputProperties(result, attribute);
 			return result;
 		}
@@ -337,24 +364,39 @@ namespace VVVV.PluginInterfaces.V2
 			INodeOut result = null;
 			host.CreateNodeOutput(attribute.Name, (TSliceMode) attribute.SliceMode, (TPinVisibility) attribute.Visibility, out result);
 			
-			// Register all implemented interfaces and inherited classes of T
-			// to support the assignment of ISpread<Apple> output to ISpread<Fruit> input.
-			var guids = new List<Guid>();
-			var typeT = type;
-			
-			foreach (var interf in typeT.GetInterfaces())
-				guids.Add(interf.GUID);
-			
-			while (typeT != null)
-			{
-				guids.Add(typeT.GUID);
-				typeT = typeT.BaseType;
-			}
+            if (type != null)
+            {
+                // Register all implemented interfaces and inherited classes of T
+                // to support the assignment of ISpread<Apple> output to ISpread<Fruit> input.
+                var guids = new List<Guid>();
 
-			result.SetSubType2(type, guids.ToArray(), type.GetCSharpName());
+                RegisterID(host, guids, type);
+
+                foreach (var interf in type.GetInterfaces())
+                    RegisterID(host, guids, interf);
+
+                var t = type.BaseType;
+                while (t != null)
+                {
+                    RegisterID(host, guids, t);
+                    t = t.BaseType;
+                }
+
+                result.SetSubType2(type, guids.ToArray(), type.GetCSharpName());
+            }
+            else
+                result.SetSubType(new Guid[] { }, "Variant");
+
             SetOutputProperties(result, attribute);
 			return result;
 		}
+
+        private static void RegisterID(IPluginHost host, List<Guid> guids, Type t)
+        {
+            Guid id = t.GUID;
+            guids.Add(id);
+            host.RegisterType(id, t.GetCSharpName());
+        }
 
         public static IRawIn CreateRawInput(this IPluginHost host, InputAttribute attribute)
         {
@@ -406,7 +448,8 @@ namespace VVVV.PluginInterfaces.V2
 
         private static void SetIOProperties(IPluginIO pin, IOAttribute attribute)
         {
-            pin.Order = attribute.Order;
+            if (attribute.Order != pin.Order)
+                pin.Order = attribute.Order;
         }
 
         private static void SetInputProperties(IPluginIn input, InputAttribute attribute)

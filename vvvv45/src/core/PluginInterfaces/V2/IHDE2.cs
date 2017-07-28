@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 using VVVV.Core;
 using VVVV.Core.Model;
 using VVVV.PluginInterfaces.V1;
@@ -40,7 +41,19 @@ namespace VVVV.PluginInterfaces.V2
     		Window = window;
     	}
     }
-    
+
+    [ComVisible(false)]
+    public class EnumEventArgs : EventArgs
+    {
+        string FEnumName;
+        public string EnumName => FEnumName;
+
+        public EnumEventArgs(string enumName)
+        {
+            FEnumName = enumName;
+        }
+    }
+
     [ComVisible(false)]
     public class ComponentModeEventArgs : EventArgs
     {
@@ -103,7 +116,10 @@ namespace VVVV.PluginInterfaces.V2
 	
 	[ComVisible(false)]
 	public delegate void ComponentModeEventHandler(object sender, ComponentModeEventArgs args);
-    
+
+    [ComVisible(false)]
+    public delegate void EnumEventHandler(object sender, EnumEventArgs args);
+
     /// <summary>
 	/// The interface to be implemented by a program to host IHDEPlugins.
 	/// </summary>
@@ -144,11 +160,12 @@ namespace VVVV.PluginInterfaces.V2
 	    event WindowEventHandler WindowRemoved;
 	    event ComponentModeEventHandler BeforeComponentModeChange;
 	    event ComponentModeEventHandler AfterComponentModeChange;
-	    
-	    /// <summary>
-	    /// The currently selected patch window.
-	    /// </summary>
-	    IWindow2 ActivePatchWindow
+        event EnumEventHandler EnumChanged;
+
+        /// <summary>
+        /// The currently selected patch window.
+        /// </summary>
+        IWindow2 ActivePatchWindow
 	    {
 	    	get;
 	    }
@@ -192,7 +209,6 @@ namespace VVVV.PluginInterfaces.V2
 			get;
 		}
 		
-	
 		/// <summary>
 		/// The realtime in seconds since the IHDEHost was created. On boygroup clients this ist the time 
 		/// since the server IHDEHost was created, synced over network. This time is not frame based,
@@ -201,8 +217,8 @@ namespace VVVV.PluginInterfaces.V2
 		double RealTime 
 		{
 			get;
-		}
-		
+		}		
+
 		/// <summary>
 		/// Initialize the internal realtime clock to a specific value
 		/// </summary>
@@ -350,14 +366,61 @@ namespace VVVV.PluginInterfaces.V2
         /// Enables the short cuts of vvvv.
         /// </summary>
         void EnableShortCuts();
-	}
-	#endregion IHDEHost
-	
-	#region NodeBrowser
-	/// <summary>
-	/// Allows the NodeBrower to be contacted by the host
-	/// </summary>
-	[Guid("A0C810DA-E0CC-4A2E-BC3F-8139766945F1"),
+        
+        /// <summary>
+        /// Reference to the 50 Editor
+        /// </summary>
+        IQueryDelete FiftyEditor
+        {
+            set;
+        }
+
+        /// <summary>
+        /// This is the untweaked frametime. Tweaking frame time is possible via clock nodes or via SetFrameTime / SetFrameTimeProvider
+        /// </summary>
+	    double OriginalFrameTime
+        {
+            get;
+        }
+
+        /// <summary>
+        /// The given provider gets called by vvvv when it needs to pin down an official frame time for the current frame. 
+        /// By using this you can potenitally reduce latency.
+        /// </summary>
+        void SetFrameTimeProvider(Func<double, double> timeProvider);
+
+        /// <summary>
+        /// The given provider gets called by vvvv when it needs to pin down an official frame time for the current frame. 
+        /// By using this you can potenitally reduce latency.
+        /// </summary>
+        void SetFrameTimeProvider(ITimeProvider timeProvider);
+
+        /// <summary>
+        /// The version of vvvv. Will for example return "35.5.0.0" for the officially called beta 35.5
+        /// </summary>
+        Version Version { get; }
+    }
+    #endregion IHDEHost
+
+    /// <summary>
+    /// Implement this small interface and set it on the IHDEHost. 
+    /// You'll get called back at the beginning of the next frame when vvvv needs to pin down an official frame for all animation nodes.
+    /// </summary>
+    [Guid("74E506D4-84B5-4263-8B32-C3A615F4869C"),
+     InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    public interface ITimeProvider
+    {
+        /// <summary>
+        /// provide the time
+        /// </summary>
+        double GetTime(double originalNewFrameTime);
+    }
+
+    #region NodeBrowser
+    /// <summary>
+    /// Allows the NodeBrower to be contacted by the host
+    /// </summary>
+    [Guid("A0C810DA-E0CC-4A2E-BC3F-8139766945F1"),
 	 InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 	public interface INodeBrowser: IPluginBase
 	{
@@ -575,6 +638,11 @@ namespace VVVV.PluginInterfaces.V2
 	    	get;
 	    }
 	    
+	    PinVisibility Visibility
+	    {
+	        get; set;
+	    }
+	    
 	    string Type
 	    {
 	    	get;
@@ -728,7 +796,7 @@ namespace VVVV.PluginInterfaces.V2
     	/// <param name="column">The column number to move to.</param>
     	/// </summary>
     	void MoveTo(int lineNumber, int column);
-    	
+ 
     	/// <summary>
     	/// Informs the editor to close the currently opened file.
     	/// </summary>

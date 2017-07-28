@@ -11,63 +11,76 @@ using System.Collections.Generic;
 
 namespace VVVV.Nodes.Generic
 {
-
 	public abstract class Zip<T> : IPluginEvaluate, IPartImportsSatisfiedNotification
 	{
-		[Input("Input", IsPinGroup = true)]
-		protected IInStream<IInStream<T>> FInputStreams;
-
-        [Input("Allow Empty Spreads", IsSingle = true, Visibility = PinVisibility.OnlyInspector)]
+		protected IIOContainer<IInStream<IInStream<T>>> FInputContainer;
         protected IDiffSpread<bool> FAllowEmptySpreadsConfig;
-		
-		[Output("Output")]
-		protected IOutStream<T> FOutputStream;
+		protected IIOContainer<IOutStream<T>> FOutputContainer;
+
+        [Import]
+        protected IIOFactory FFactory;
 
         private bool FAllowEmptySpreads;
 
         public void OnImportsSatisfied()
         {
+            FInputContainer = FFactory.CreateIOContainer<IInStream<IInStream<T>>>(
+                new InputAttribute("Input") { IsPinGroup = true });
+
+            FOutputContainer = FFactory.CreateIOContainer<IOutStream<T>>(
+                new OutputAttribute("Output"));
+
+            FAllowEmptySpreadsConfig = FFactory.CreateDiffSpread<bool>(
+                new InputAttribute("Allow Empty Spreads") { IsSingle = true, Visibility = PinVisibility.OnlyInspector });
+
             FAllowEmptySpreadsConfig.Changed += (s) => FAllowEmptySpreads = s[0];
         }
+
+        /// <summary>
+        /// Called before evaluation of the node starts. Return false in case nothing has to be done.
+        /// </summary>
+        protected virtual bool Prepare() => FInputContainer.IOObject.IsChanged || FAllowEmptySpreadsConfig.IsChanged;
 		
 		public void Evaluate(int SpreadMax)
 		{
+            if (!Prepare()) return;
+
             IEnumerable<IInStream<T>> inputStreams;
             int inputStreamsLength;
+            var inputStreams_ = FInputContainer.IOObject;
             if (FAllowEmptySpreads)
             {
-                inputStreams = FInputStreams.Where(s => s.Length > 0);
+                inputStreams = inputStreams_.Where(s => s.Length > 0);
                 inputStreamsLength = inputStreams.Count();
             }
             else
             {
-                inputStreams = FInputStreams;
-                inputStreamsLength = FInputStreams.Length;
+                inputStreams = inputStreams_;
+                inputStreamsLength = inputStreams_.Length;
             }
             int maxInputStreamLength = inputStreams.GetMaxLength();
-            FOutputStream.Length = maxInputStreamLength * inputStreamsLength;
 
-            if (FOutputStream.Length > 0)
+            var outputStream = FOutputContainer.IOObject;
+            outputStream.Length = maxInputStreamLength * inputStreamsLength;
+
+            if (outputStream.Length > 0)
             {
                 var buffer = MemoryPool<T>.GetArray();
                 try
                 {
-                    using (var writer = FOutputStream.GetWriter())
+                    using (var writer = outputStream.GetWriter())
                     {
                         int numSlicesToRead = Math.Min(maxInputStreamLength, buffer.Length);
                         int i = 0;
                         foreach (var inputStream in inputStreams)
                         {
                             writer.Position = i++;
-                            if (inputStream.IsChanged)
+                            using (var reader = inputStream.GetCyclicReader())
                             {
-                                using (var reader = inputStream.GetCyclicReader())
+                                while (!writer.Eos)
                                 {
-                                    while (!writer.Eos)
-                                    {
-                                        reader.Read(buffer, 0, numSlicesToRead);
-                                        writer.Write(buffer, 0, numSlicesToRead, inputStreamsLength);
-                                    }
+                                    reader.Read(buffer, 0, numSlicesToRead);
+                                    writer.Write(buffer, 0, numSlicesToRead, inputStreamsLength);
                                 }
                             }
                         }

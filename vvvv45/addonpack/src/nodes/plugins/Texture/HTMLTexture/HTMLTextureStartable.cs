@@ -18,20 +18,19 @@ namespace VVVV.Nodes.Texture.HTML
             CefRuntime.Load();
 
             var cefSettings = new CefSettings();
-            cefSettings.PackLoadingDisabled = true;
+            cefSettings.WindowlessRenderingEnabled = true;
+            cefSettings.PackLoadingDisabled = false;
             cefSettings.MultiThreadedMessageLoop = true;
             cefSettings.BrowserSubprocessPath = Assembly.GetExecutingAssembly().Location;
             cefSettings.CommandLineArgsDisabled = false;
             cefSettings.IgnoreCertificateErrors = true;
-            // We do not meet the requirements - see cef_sandbox_win.h
-            cefSettings.NoSandbox = true;
+            //// We do not meet the requirements - see cef_sandbox_win.h
+            //cefSettings.NoSandbox = true;
 #if DEBUG
-            cefSettings.ReleaseDCheckEnabled = true;
             cefSettings.LogSeverity = CefLogSeverity.Error;
             // Set to true to debug DOM / JavaScript
             cefSettings.SingleProcess = false;
 #else
-            cefSettings.ReleaseDCheckEnabled = false;
             cefSettings.LogSeverity = CefLogSeverity.Disable;
 #endif
 

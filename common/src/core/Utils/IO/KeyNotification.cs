@@ -22,6 +22,11 @@ namespace VVVV.Utils.IO
         {
             Kind = kind;
         }
+
+        public bool IsKeyDown { get { return Kind == KeyNotificationKind.KeyDown; } }
+        public bool IsKeyUp { get { return Kind == KeyNotificationKind.KeyUp; } }
+        public bool IsKeyPress { get { return Kind == KeyNotificationKind.KeyPress; } }
+        public bool IsDeviceLost { get { return Kind == KeyNotificationKind.DeviceLost; } }
     }
 
     public abstract class KeyCodeNotification : KeyNotification
@@ -36,10 +41,15 @@ namespace VVVV.Utils.IO
 
     public class KeyDownNotification : KeyCodeNotification
     {
-        public KeyDownNotification(Keys keyCode)
-            : base(KeyNotificationKind.KeyDown, keyCode)
+        public KeyDownNotification(Keys keyCode) : this(new KeyEventArgs(keyCode)) { }
+        public KeyDownNotification(KeyEventArgs args)
+            : base(KeyNotificationKind.KeyDown, args.KeyCode)
         {
+            origArgs = args;
         }
+        KeyEventArgs origArgs;
+
+        public bool Handled { get { return origArgs.Handled; } set { origArgs.Handled = value; } } 
     }
 
     public class KeyPressNotification : KeyNotification

@@ -22,23 +22,37 @@ namespace VVVV.Hosting.IO
                               ISpread spread = null;
                               if (t.IsGenericType && t.GetGenericArguments().Length == 1)
                               {
-                                  if (typeof(ISpread<>).MakeGenericType(t.GetGenericArguments().First()).IsAssignableFrom(t))
+                                  if (attribute.IsBinSizeEnabled && typeof(ISpread<>).MakeGenericType(t.GetGenericArguments().First()).IsAssignableFrom(t))
                                   {
-                                      var spreadType = typeof(InputBinSpread<>).MakeGenericType(t.GetGenericArguments().First());
+                                      var spreadType = attribute.CheckIfChanged
+                                          ? typeof(DiffInputBinSpread<>).MakeGenericType(t.GetGenericArguments().First())
+                                          : typeof(InputBinSpread<>).MakeGenericType(t.GetGenericArguments().First());
                                       
                                       if (attribute.IsPinGroup)
                                       {
-                                          spreadType = typeof(InputSpreadList<>).MakeGenericType(t.GetGenericArguments().First());
+                                          spreadType = attribute.CheckIfChanged 
+                                              ? typeof(DiffInputSpreadList<>).MakeGenericType(t.GetGenericArguments().First())
+                                              : typeof(InputSpreadList<>).MakeGenericType(t.GetGenericArguments().First());
                                       }
 
                                       if (context.BinSizeIOContainer != null)
                                           spread = Activator.CreateInstance(spreadType, factory, attribute.Clone(), context.BinSizeIOContainer) as ISpread;
                                       else
                                           spread = Activator.CreateInstance(spreadType, factory, attribute.Clone()) as ISpread;
-                                      if (attribute.AutoValidate)
-                                          return GenericIOContainer.Create(context, factory, spread, s => s.Sync());
+                                      if (attribute.CheckIfChanged)
+                                      {
+                                          if (attribute.AutoValidate)
+                                              return GenericIOContainer.Create(context, factory, spread, s => s.Sync(), s => s.Flush());
+                                          else
+                                              return GenericIOContainer.Create(context, factory, spread, null, s => s.Flush());
+                                      }
                                       else
-                                          return GenericIOContainer.Create(context, factory, spread);
+                                      {
+                                          if (attribute.AutoValidate)
+                                              return GenericIOContainer.Create(context, factory, spread, s => s.Sync());
+                                          else
+                                              return GenericIOContainer.Create(context, factory, spread);
+                                      }
                                   }
                               }
                               var container = factory.CreateIOContainer(typeof(IInStream<>).MakeGenericType(context.DataType), attribute, false);
@@ -58,7 +72,7 @@ namespace VVVV.Hosting.IO
                               
                               if (t.IsGenericType && t.GetGenericArguments().Length == 1)
                               {
-                                  if (typeof(ISpread<>).MakeGenericType(t.GetGenericArguments().First()).IsAssignableFrom(t))
+                                  if (attribute.IsBinSizeEnabled && typeof(ISpread<>).MakeGenericType(t.GetGenericArguments().First()).IsAssignableFrom(t))
                                   {
                                       var spreadType = typeof(DiffInputBinSpread<>).MakeGenericType(t.GetGenericArguments().First());
                                       
@@ -66,8 +80,11 @@ namespace VVVV.Hosting.IO
                                       {
                                           spreadType = typeof(DiffInputSpreadList<>).MakeGenericType(t.GetGenericArguments().First());
                                       }
-                                      
-                                      spread = Activator.CreateInstance(spreadType, factory, attribute.Clone()) as ISpread;
+
+                                      if (context.BinSizeIOContainer != null)
+                                          spread = Activator.CreateInstance(spreadType, factory, attribute.Clone(), context.BinSizeIOContainer) as ISpread;
+                                      else
+                                          spread = Activator.CreateInstance(spreadType, factory, attribute.Clone()) as ISpread;
                                       if (attribute.AutoValidate)
                                           return GenericIOContainer.Create(context, factory, spread, s => s.Sync(), s => s.Flush());
                                       else
@@ -95,7 +112,7 @@ namespace VVVV.Hosting.IO
                                var t = context.DataType;
                                if (t.IsGenericType && t.GetGenericArguments().Length == 1)
                                {
-                                   if (typeof(ISpread<>).MakeGenericType(t.GetGenericArguments().First()).IsAssignableFrom(t))
+                                   if (attribute.IsBinSizeEnabled && typeof(ISpread<>).MakeGenericType(t.GetGenericArguments().First()).IsAssignableFrom(t))
                                    {
                                        var spreadType = typeof(OutputBinSpread<>).MakeGenericType(t.GetGenericArguments().First());
                                        

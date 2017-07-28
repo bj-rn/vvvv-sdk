@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.Composition;
+using System.Linq;
 using VVVV.Nodes.Generic;
 using VVVV.PluginInterfaces.V1;
 using VVVV.PluginInterfaces.V2;
@@ -11,8 +12,9 @@ namespace VVVV.Nodes
 {
     static class UnzipInfo
     {
-        public const string HELP = "Unzips a spread into multiple spreads";
-        public const string TAGS = "spread, split";
+        public const string HELP = "The inverse of Zip. Interprets the Input spread as being interleaved and untangles it.";
+        public const string HELPBIN = "The inverse of Zip. Interprets the Input spread as being interleaved and untangles it. With Bin Size.";
+        public const string TAGS = "split, generic, spreadop";
     }
 
 	[PluginInfo(Name = "Unzip", Category = "Value", Help = UnzipInfo.HELP, Tags = UnzipInfo.TAGS)]
@@ -21,7 +23,7 @@ namespace VVVV.Nodes
 		
 	}
 	
-	[PluginInfo(Name = "Unzip", Category = "Value", Version = "Bin", Help = UnzipInfo.HELP, Tags = UnzipInfo.TAGS)]
+	[PluginInfo(Name = "Unzip", Category = "Value", Version = "Bin", Help = UnzipInfo.HELPBIN, Tags = UnzipInfo.TAGS)]
 	public class ValueBinSizeUnzipNode : Unzip<IInStream<double>>
 	{
 		
@@ -33,7 +35,7 @@ namespace VVVV.Nodes
 		
 	}
 
-    [PluginInfo(Name = "Unzip", Category = "2d", Version = "Bin", Help = UnzipInfo.HELP, Tags = UnzipInfo.TAGS)]
+    [PluginInfo(Name = "Unzip", Category = "2d", Version = "Bin", Help = UnzipInfo.HELPBIN, Tags = UnzipInfo.TAGS)]
     public class Vector2DBinSizeUnzipNode : Unzip<IInStream<Vector2D>>
     {
 
@@ -45,7 +47,7 @@ namespace VVVV.Nodes
 		
 	}
 
-    [PluginInfo(Name = "Unzip", Category = "3d", Version = "Bin", Help = UnzipInfo.HELP, Tags = UnzipInfo.TAGS)]
+    [PluginInfo(Name = "Unzip", Category = "3d", Version = "Bin", Help = UnzipInfo.HELPBIN, Tags = UnzipInfo.TAGS)]
     public class Vector3DBinSizeUnzipNode : Unzip<IInStream<Vector3D>>
     {
 
@@ -57,7 +59,7 @@ namespace VVVV.Nodes
 		
 	}
 
-    [PluginInfo(Name = "Unzip", Category = "4d", Version = "Bin", Help = UnzipInfo.HELP, Tags = UnzipInfo.TAGS)]
+    [PluginInfo(Name = "Unzip", Category = "4d", Version = "Bin", Help = UnzipInfo.HELPBIN, Tags = UnzipInfo.TAGS)]
     public class Vector4DBinSizeUnzipNode : Unzip<IInStream<Vector4D>>
     {
 
@@ -69,7 +71,7 @@ namespace VVVV.Nodes
 		
 	}
 
-    [PluginInfo(Name = "Unzip", Category = "Color", Version = "Bin", Help = UnzipInfo.HELP, Tags = UnzipInfo.TAGS)]
+    [PluginInfo(Name = "Unzip", Category = "Color", Version = "Bin", Help = UnzipInfo.HELPBIN, Tags = UnzipInfo.TAGS)]
     public class ColorBinSizeUnzipNode : Unzip<IInStream<RGBAColor>>
     {
 
@@ -81,7 +83,7 @@ namespace VVVV.Nodes
 		
 	}
 
-    [PluginInfo(Name = "Unzip", Category = "String", Version = "Bin", Help = UnzipInfo.HELP, Tags = UnzipInfo.TAGS)]
+    [PluginInfo(Name = "Unzip", Category = "String", Version = "Bin", Help = UnzipInfo.HELPBIN, Tags = UnzipInfo.TAGS)]
     public class StringBinSizeUnzipNode : Unzip<IInStream<string>>
     {
 
@@ -93,7 +95,7 @@ namespace VVVV.Nodes
 		
 	}
 
-    [PluginInfo(Name = "Unzip", Category = "Transform", Version = "Bin", Help = UnzipInfo.HELP, Tags = UnzipInfo.TAGS)]
+    [PluginInfo(Name = "Unzip", Category = "Transform", Version = "Bin", Help = UnzipInfo.HELPBIN, Tags = UnzipInfo.TAGS)]
     public class TransformBinSizeUnzipNode : Unzip<IInStream<Matrix4x4>>
     {
 
@@ -102,13 +104,49 @@ namespace VVVV.Nodes
 	[PluginInfo(Name = "Unzip", Category = "Enumerations", Help = UnzipInfo.HELP, Tags = UnzipInfo.TAGS)]
 	public class EnumUnzipNode : Unzip<EnumEntry>
 	{
-		
-	}
+        string FLastSubType;
 
-    [PluginInfo(Name = "Unzip", Category = "Enumerations", Version = "Bin", Help = UnzipInfo.HELP, Tags = UnzipInfo.TAGS)]
+        protected override void Prepare()
+        {
+            string subType = null;
+            foreach (var output in FOutputContainer.GetPluginIOs().OfType<IPin>())
+            {
+                subType = output.GetDownstreamSubType();
+                if (subType != null)
+                    break;
+            }
+            if (subType != FLastSubType)
+            {
+                FLastSubType = subType;
+                foreach (var outputPin in FOutputContainer.GetPluginIOs().OfType<IEnumIn>())
+                    outputPin.SetSubType(subType);
+                (FInputContainer.GetPluginIO() as IEnumIn).SetSubType(subType);
+            }
+        }
+    }
+
+    [PluginInfo(Name = "Unzip", Category = "Enumerations", Version = "Bin", Help = UnzipInfo.HELPBIN, Tags = UnzipInfo.TAGS)]
     public class EnumBinSizeUnzipNode : Unzip<IInStream<EnumEntry>>
     {
+        string FLastSubType;
 
+        protected override void Prepare()
+        {
+            string subType = null;
+            foreach (var output in FOutputContainer.GetPluginIOs().OfType<IPin>())
+            {
+                subType = output.GetDownstreamSubType();
+                if (subType != null)
+                    break;
+            }
+            if (subType != FLastSubType)
+            {
+                FLastSubType = subType;
+                foreach (var outputPin in FOutputContainer.GetPluginIOs().OfType<IEnumIn>())
+                    outputPin.SetSubType(subType);
+                (FInputContainer.GetPluginIO() as IEnumIn).SetSubType(subType);
+            }
+        }
     }
     
     [PluginInfo(Name = "Unzip", Category = "Raw", Help = UnzipInfo.HELP, Tags = UnzipInfo.TAGS)]
@@ -117,7 +155,7 @@ namespace VVVV.Nodes
 		
 	}
 
-    [PluginInfo(Name = "Unzip", Category = "Raw", Version = "Bin", Help = UnzipInfo.HELP, Tags = UnzipInfo.TAGS)]
+    [PluginInfo(Name = "Unzip", Category = "Raw", Version = "Bin", Help = UnzipInfo.HELPBIN, Tags = UnzipInfo.TAGS)]
     public class RawBinSizeUnzipNode : Unzip<IInStream<System.IO.Stream>>
     {
 

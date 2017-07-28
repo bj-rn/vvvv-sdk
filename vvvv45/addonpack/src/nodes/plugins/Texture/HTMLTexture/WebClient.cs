@@ -11,6 +11,14 @@ namespace VVVV.Nodes.Texture.HTML
 {
     public class WebClient : CefClient
     {
+        public class RequestContextHandler : CefRequestContextHandler
+        {
+            protected override CefCookieManager GetCookieManager()
+            {
+                return null;
+            }
+        }
+
         class RenderHandler : CefRenderHandler
         {
             private readonly HTMLTextureRenderer FRenderer;
@@ -22,10 +30,7 @@ namespace VVVV.Nodes.Texture.HTML
 
             protected override bool GetRootScreenRect(CefBrowser browser, ref CefRectangle rect)
             {
-                rect.X = rect.Y = 0;
-                rect.Width = FRenderer.Size.Width;
-                rect.Height = FRenderer.Size.Height;
-                return true;
+                return false;
             }
 
             protected override bool GetViewRect(CefBrowser browser, ref CefRectangle rect)
@@ -41,9 +46,9 @@ namespace VVVV.Nodes.Texture.HTML
                 return base.GetScreenPoint(browser, viewX, viewY, ref screenX, ref screenY);
             }
 
-            protected override void OnCursorChange(CefBrowser browser, IntPtr cursorHandle)
+            protected override void OnCursorChange(CefBrowser browser, IntPtr cursorHandle, CefCursorType type, CefCursorInfo customCursorInfo)
             {
-                
+
             }
 
             protected override void OnPopupShow(CefBrowser browser, bool show)
@@ -60,7 +65,7 @@ namespace VVVV.Nodes.Texture.HTML
             {
                 switch (type) {
                     case CefPaintElementType.View:
-                        FRenderer.Paint(dirtyRects, buffer, width * 4);
+                        FRenderer.Paint(dirtyRects, buffer, width * 4, width, height);
                         break;
                     case CefPaintElementType.Popup:
                         break;
@@ -72,7 +77,7 @@ namespace VVVV.Nodes.Texture.HTML
                 return false;
             }
 
-            protected override void OnScrollOffsetChanged(CefBrowser browser)
+            protected override void OnScrollOffsetChanged(CefBrowser browser, double x, double y)
             {
                 // Do not report the change as long as the renderer is busy loading content
                 if (!FRenderer.IsLoading)
@@ -181,7 +186,7 @@ namespace VVVV.Nodes.Texture.HTML
                 FRenderer = renderer;
             }
 
-            protected override bool OnBeforePopup(CefBrowser browser, CefFrame frame, string targetUrl, string targetFrameName, CefPopupFeatures popupFeatures, CefWindowInfo windowInfo, ref CefClient client, CefBrowserSettings settings, ref bool noJavascriptAccess)
+            protected override bool OnBeforePopup(CefBrowser browser, CefFrame frame, string targetUrl, string targetFrameName, CefWindowOpenDisposition targetDisposition, bool userGesture, CefPopupFeatures popupFeatures, CefWindowInfo windowInfo, ref CefClient client, CefBrowserSettings settings, ref bool noJavascriptAccess)
             {
                 FRenderer.LoadUrl(targetUrl);
                 return true;
@@ -197,13 +202,6 @@ namespace VVVV.Nodes.Texture.HTML
             {
                 FRenderer.Detach();
                 base.OnBeforeClose(browser);
-            }
-        }
-
-        class DomEventEventListener : CefDomEventListener
-        {
-            protected override void HandleEvent(CefDomEvent e)
-            {
             }
         }
         

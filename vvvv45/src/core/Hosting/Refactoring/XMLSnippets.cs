@@ -26,17 +26,26 @@ namespace VVVV.Hosting
 			FPatch.AppendChild(patch);
 			Filename = fileName;
 		}
-		
+
+        private string FFileName;
 		public string Filename
 		{
-			get {return FPatch.DocumentElement.GetAttribute("saveme");}
+			get {return FFileName;}
 			set 
 			{
-				if (!string.IsNullOrEmpty(value))
-					FPatch.DocumentElement.SetAttribute("saveme", value);
+                if (FFileName != value)
+                {
+                    FPatch.DocumentElement.SetAttribute("nodename", value);
+                    FFileName = value;
+                }
 			}
-		}
-		
+        }
+
+        public void AddSaveMe()
+        {
+            FPatch.DocumentElement.SetAttribute("saveme", FFileName);
+        }
+
 		public NodeMessage AddNode(int id)
 		{
 			var node = new NodeMessage(FPatch, id);
@@ -89,11 +98,29 @@ namespace VVVV.Hosting
 			//get {return ComponentMode.Parse(GetAttribute("componentmode"));}
 			set {SetAttribute("componentmode", value.ToString());}
 		}
+
+        public bool CreateMe
+        {
+            get 
+            {
+                var a = GetAttribute("createme");
+                if (a != null)
+                    return bool.Parse(a);
+                return false;
+            }
+            set { SetAttribute("createme", value.ToString()); }
+        }
 		
 		public bool DeleteMe 
 		{
-			get {return bool.Parse(GetAttribute("deleteme"));}
-			set {SetAttribute("deleteme", value.ToString());}
+			get 
+            {
+                var a = GetAttribute("deleteme");
+                if (a != null)
+                    return bool.Parse(a);
+                return false;
+            }
+			set { SetAttribute("deleteme", value.ToString()); }
 		}
 					
 		public PinMessage AddPin(string pinName)

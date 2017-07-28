@@ -60,6 +60,8 @@ namespace VVVV.Nodes.Texture.HTML
         public ISpread<int> FWidthIn;
         [Input("Height", DefaultValue = HTMLTextureRenderer.DEFAULT_HEIGHT)]
         public ISpread<int> FHeightIn;
+        [Input("Frame Rate", MinValue = HTMLTextureRenderer.MIN_FRAME_RATE, MaxValue = HTMLTextureRenderer.MAX_FRAME_RATE, DefaultValue = 60)]
+        public ISpread<int> FFrameRateIn;
         [Input("Zoom Level")]
         public ISpread<double> FZoomLevelIn;
         [Input("Mouse Event")]
@@ -89,6 +91,8 @@ namespace VVVV.Nodes.Texture.HTML
         public ISpread<int> FDocumentHeightOut;
         [Output("Is Loading")]
         public ISpread<bool> FIsLoadingOut;
+        [Output("Loaded")]
+        public ISpread<bool> FLoadedOut;
         [Output("Current Url")]
         public ISpread<string> FCurrentUrlOut;
         [Output("Error Text")]
@@ -106,7 +110,7 @@ namespace VVVV.Nodes.Texture.HTML
 
         public void Evaluate(int spreadMax)
         {
-            FWebRenderers.ResizeAndDispose(spreadMax, () => new HTMLTextureRenderer(FLogger));
+            FWebRenderers.ResizeAndDispose(spreadMax, (i) => new HTMLTextureRenderer(FLogger, FFrameRateIn[i]));
 
             FTextureOut.SliceCount = spreadMax;
             FRootElementOut.SliceCount = spreadMax;
@@ -114,12 +118,21 @@ namespace VVVV.Nodes.Texture.HTML
             FDocumentWidthOut.SliceCount = spreadMax;
             FDocumentHeightOut.SliceCount = spreadMax;
             FIsLoadingOut.SliceCount = spreadMax;
+            FLoadedOut.SliceCount = spreadMax;
             FErrorTextOut.SliceCount = spreadMax;
             FCurrentUrlOut.SliceCount = spreadMax;
 
             for (int i = 0; i < spreadMax; i++)
             {
                 var webRenderer = FWebRenderers[i];
+
+                var frameRate = VMath.Clamp(FFrameRateIn[i], HTMLTextureRenderer.MIN_FRAME_RATE, HTMLTextureRenderer.MAX_FRAME_RATE);
+                if (frameRate != webRenderer.FrameRate)
+                {
+                    webRenderer.Dispose();
+                    webRenderer = new HTMLTextureRenderer(FLogger, frameRate);
+                    FWebRenderers[i] = webRenderer;
+                }
 
                 // Check enabled state
                 webRenderer.Enabled = FEnabledIn[i];
@@ -146,6 +159,7 @@ namespace VVVV.Nodes.Texture.HTML
                 // Set outputs
                 FErrorTextOut[i] = webRenderer.CurrentError;
                 FIsLoadingOut[i] = webRenderer.IsLoading;
+                FLoadedOut[i] = webRenderer.Loaded;
                 // As long as the renderer is in the loading state stick to the old values
                 if (!webRenderer.IsLoading)
                 {

@@ -6,6 +6,8 @@ using System.Diagnostics;
 using System.Threading;
 using System.Text;
 using System.Collections;
+using System.Linq;
+using VVVV.Utils.Linq;
 
 namespace VVVV.Nodes
 {
@@ -196,17 +198,17 @@ namespace VVVV.Nodes
             FHost = Host;
 
             //INPUT-PINS
+            FHost.CreateStringInput("Mask", TSliceMode.Dynamic, TPinVisibility.True, out FMask);
+            FMask.SetSubType("*.*", false);
+            
             FHost.CreateStringInput("Directory", TSliceMode.Single, TPinVisibility.True, out FDirectory);
-            FDirectory.SetSubType2("C:\\", int.MaxValue, string.Empty, TStringType.Directory);
+            FDirectory.SetSubType2("", int.MaxValue, string.Empty, TStringType.Directory);
 
             FHost.CreateValueInput("Include Subdirectories", 1, null, TSliceMode.Single, TPinVisibility.True, out FSubdirectories);
             FSubdirectories.SetSubType(0, 1, 1, 0, false, true, true);
 
-            FHost.CreateValueInput("Show Short Filename", 1, null, TSliceMode.Single, TPinVisibility.True, out FShortFilenameIn);
+            FHost.CreateValueInput("Show Short Filename", 1, null, TSliceMode.Single, TPinVisibility.False, out FShortFilenameIn);
             FShortFilenameIn.SetSubType(0, 1, 1, 1, false, true, true);
-
-            FHost.CreateStringInput("Mask", TSliceMode.Dynamic, TPinVisibility.True, out FMask);
-            FMask.SetSubType("*.*", false);
 
             FHost.UpdateEnum("Sort Order", "Name", new string[] { "Name", "FullName", "FileSize", "Extension", "LastAccess", "LastWriteTime", "CreationTime" });
             FHost.CreateEnumInput("Sort Order", TSliceMode.Single, TPinVisibility.True, out FMaskRule);
@@ -235,7 +237,6 @@ namespace VVVV.Nodes
 
             FHost.CreateStringOutput("Message", TSliceMode.Single, TPinVisibility.Hidden, out FMessage);
             FMessage.SetSubType("OK",false);
-
         }
 
         #endregion Pin Creation
@@ -259,7 +260,6 @@ namespace VVVV.Nodes
         /// </summary>
         public void Evaluate(int SpreadMax)
         {
-
             // Get Node Settings
             string DirectoryPath = "";
             double IncludeSubdirectories = 0;
@@ -273,22 +273,26 @@ namespace VVVV.Nodes
             //Check if any pin is changed and setup a new search;
             if (FDirectory.PinIsChanged || FSubdirectories.PinIsChanged || FMask.PinIsChanged || FMaskRule.PinIsChanged || FCountIn.PinIsChanged || FShortFilenameIn.PinIsChanged || FCountOrder.PinIsChanged || FUpdate.PinIsChanged)
             {
-
                 //Get the DirectoryPath String an check if it null, empty or exist. if not the function is returned
                 FDirectory.GetString(0, out DirectoryPath);
                 if(String.IsNullOrEmpty(DirectoryPath) || !Directory.Exists(DirectoryPath))
                 {
-                    FHost.Log(TLogType.Error, "Please Enter a correct directory Path..");
+                    FFiles.SliceCount = 0;
+                    FShortFilenameOut.SliceCount = 0;
+                    FCountOut.SetValue(0, 0);
+                    
+                    SetMessage("Please Enter a correct directory Path..");
                     return;
                 }
-
 
                 FSubdirectories.GetValue(0, out IncludeSubdirectories);
                 FMaskRule.GetString(0, out MaskRule);;        
                 FCountIn.GetValue(0, out CountIn);
                 FCountOrder.GetString(0, out CountOrder);
 
-
+                char[] invalidPathChars = Path.GetInvalidPathChars();
+                var n1 = ".." + Path.DirectorySeparatorChar;
+                var n2 = ".." + Path.AltDirectorySeparatorChar;
                 //Get all Serach Masks 
                 for (int i = 0; i < FMask.SliceCount; i++)
                 {
@@ -297,7 +301,10 @@ namespace VVVV.Nodes
                     
                     if(!String.IsNullOrEmpty(MaskSlice))
                     {
-                        Mask.Add(MaskSlice);
+                        //the remarks here explain several things that are not allowed for the searchPattern:
+                        //https://msdn.microsoft.com/en-us/library/ms143316(v=vs.110).aspx
+                        if (MaskSlice.None(c => invalidPathChars.Contains(c)) && !MaskSlice.EndsWith("..") && !MaskSlice.Contains(n1) && !MaskSlice.Contains(n2))
+                            Mask.Add(MaskSlice);
                     }
                 }
 
@@ -306,9 +313,6 @@ namespace VVVV.Nodes
                 {
                     Mask.Add("*.*");
                 }
-
-
-                
 
                 //Create a new Search with the given setup. If there exist a Search Object we are still Searching. 
                 if (FSearch == null)
@@ -331,14 +335,9 @@ namespace VVVV.Nodes
                 }
             }
 
-            
-
-
-
             //Read the Resulte of the SearchProcess
             if (FSearch != null)
             {
-
                 string Message = FSearch.GetStatus();
                 SetMessage(Message);
 
@@ -380,12 +379,11 @@ namespace VVVV.Nodes
             FMessage.SetString(0, Message);
             if (Message != "Please Update")
             {
-                FHost.Log(TLogType.Message, Message);
+                FHost.Log(TLogType.Debug, Message);
             }
         }
 
         #endregion Evaluate
-
     }
 
     #endregion Dir Node
@@ -689,7 +687,7 @@ namespace VVVV.Nodes
                         Infos.Add(Info);
                     }
                 }
-                catch(UnauthorizedAccessException ex)
+                catch(Exception ex)
                 {
                     FStatus = ex.Message;
                 }

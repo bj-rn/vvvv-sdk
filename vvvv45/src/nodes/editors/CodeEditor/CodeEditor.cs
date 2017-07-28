@@ -42,12 +42,14 @@ using VVVV.Core.Model.CS;
 using VVVV.Core.Model.FX;
 using VVVV.Core.Runtime;
 using VVVV.HDE.CodeEditor.Actions;
-using VVVV.HDE.CodeEditor.Gui.SearchBar;
+using VVVV.HDE.CodeEditor.Gui;
 using VVVV.HDE.CodeEditor.LanguageBindings.CS;
 using VVVV.PluginInterfaces.V2;
 using Dom = ICSharpCode.SharpDevelop.Dom;
 using NRefactory = ICSharpCode.NRefactory;
 using SD = ICSharpCode.TextEditor.Document;
+using System.Reactive.Linq;
+using System.Threading;
 
 namespace VVVV.HDE.CodeEditor
 {
@@ -62,6 +64,7 @@ namespace VVVV.HDE.CodeEditor
         private System.Windows.Forms.Timer FTimer;
         private Form FParentForm;
         private SearchBar FSearchBar;
+        private ReloadBar FReloadBar;
         
         private ITextDocument FTextDocument;
         private ICompletionBinding FCompletionBinding;
@@ -257,8 +260,12 @@ namespace VVVV.HDE.CodeEditor
             // Backup some defaults
             FDefaultFormattingStrategy = Document.FormattingStrategy;
             
-            // Setup search bar
+            // Setup bars
             FSearchBar = new SearchBar(this);
+            Controls.Add(FSearchBar);
+            FReloadBar = new ReloadBar(this);
+            FReloadBar.Dock = DockStyle.Top;
+            Controls.Add(FReloadBar);
             
             // Setup selection highlighting
             ActiveTextAreaControl.SelectionManager.SelectionChanged += FTextEditorControl_ActiveTextAreaControl_SelectionManager_SelectionChanged;
@@ -267,7 +274,7 @@ namespace VVVV.HDE.CodeEditor
             TextChanged += TextEditorControlTextChangedCB;
             
             // Start parsing after 500ms have passed after last key stroke.
-            FTimer = new Timer();
+            FTimer = new System.Windows.Forms.Timer();
             FTimer.Interval = 500;
             FTimer.Tick += TimerTickCB;
             
@@ -306,9 +313,9 @@ namespace VVVV.HDE.CodeEditor
 
         protected override void Dispose(bool disposing)
         {
-            if(!IsDisposed)
+            if (!IsDisposed)
             {
-                if(disposing)
+                if (disposing)
                 {
                     CloseCodeCompletionWindow(this, EventArgs.Empty);
                     CloseInsightWindow(this, EventArgs.Empty);
@@ -325,10 +332,17 @@ namespace VVVV.HDE.CodeEditor
                         FSearchBar.Dispose();
                         FSearchBar = null;
                     }
+
+                    if (FReloadBar != null)
+                    {
+                        FReloadBar.Dispose();
+                        FReloadBar = null;
+                    }
                     
                     TextChanged -= TextEditorControlTextChangedCB;
                     ActiveTextAreaControl.TextArea.Resize -= FTextEditorControl_ActiveTextAreaControl_TextArea_Resize;
                     ActiveTextAreaControl.SelectionManager.SelectionChanged -= FTextEditorControl_ActiveTextAreaControl_SelectionManager_SelectionChanged;
+                    TextDocument = null;
                 }
             }
             
@@ -585,11 +599,8 @@ namespace VVVV.HDE.CodeEditor
         /// </summary>
         void TextDocumentContentChangedCB(object sender, ContentChangedEventArgs args)
         {
-            var textContent = string.Empty;
-            using (var reader = new LeaveOpenStreamReader(args.NewContent))
-                textContent = reader.ReadToEnd();
             FIsSynchronizing = true;
-            Document.Replace(0, Document.TextLength, textContent);
+            Document.Replace(0, Document.TextLength, TextDocument.TextContent);
             Refresh();
             FIsSynchronizing = false;
         }
@@ -599,7 +610,7 @@ namespace VVVV.HDE.CodeEditor
             KeyEventArgs ke = new KeyEventArgs((Keys)m.WParam.ToInt32() | ModifierKeys);
             FNeedsKeyUp = !(m.Msg == 0x101);
             
-            if (ke.Control && ke.KeyCode == Keys.S && m.Msg == 0x100)
+            if (ke.Control && ke.KeyCode == Keys.S && !ke.Alt && m.Msg == 0x100)
             {
                 if (!TextDocument.IsReadOnly)
                 {
@@ -613,6 +624,21 @@ namespace VVVV.HDE.CodeEditor
                         project.CompileAsync();
                     }
                     OnSavePressed();
+                }
+                return true;
+            }
+            else if (ke.Control && ke.KeyCode == Keys.S && ke.Alt && m.Msg == 0x100)
+            {
+                string ext = Path.GetExtension(TextDocument.Project.LocalPath);
+
+                var saveDialog = new System.Windows.Forms.SaveFileDialog();
+                saveDialog.InitialDirectory = Path.GetDirectoryName(TextDocument.Project.LocalPath);
+                saveDialog.Filter = String.Format("{0} Document (*.{1})|*.{1}", ext.ToUpper(), ext.ToLower());
+                saveDialog.AddExtension = true;
+
+                if (saveDialog.ShowDialog() == DialogResult.OK)
+                {
+                    File.WriteAllText(saveDialog.FileName, TextDocument.TextContent);
                 }
                 return true;
             }
@@ -891,9 +917,9 @@ namespace VVVV.HDE.CodeEditor
                 FInsightWindow = null;
             }
         }
-        
+
         #endregion
-        
+
         #region Initialization
         
         private void InitializeTextDocument(ITextDocument doc)
@@ -911,14 +937,29 @@ namespace VVVV.HDE.CodeEditor
             
             Document.TextContent = doc.TextContent;
             doc.ContentChanged += TextDocumentContentChangedCB;
+
+            FSubscription = Observable.FromEventPattern<EventArgs>(doc, nameof(doc.FileChanged))
+                .ObserveOn(SynchronizationContext.Current)
+                .Do(e =>
+                {
+                    FReloadBar.ShowBar();
+                })
+                .Subscribe();
         }
         
         private void ShutdownTextDocument(ITextDocument doc)
         {
             doc.ContentChanged -= TextDocumentContentChangedCB;
             Document.TextContent = string.Empty;
+            if (FSubscription != null)
+            {
+                FSubscription.Dispose();
+                FSubscription = null;
+            }
         }
-        
+
+        IDisposable FSubscription;
+
         #endregion
     }
 }

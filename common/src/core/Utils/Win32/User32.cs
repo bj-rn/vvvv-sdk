@@ -26,6 +26,18 @@ namespace VVVV.Utils.Win32
         public static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
 
         [DllImport("user32")]
+        public static extern IntPtr GetDesktopWindow();
+
+        [DllImport("user32")]
+        public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpWindowText, int nMaxCount);
+
+        [DllImport("user32", EntryPoint = "GetWindowTextLength", SetLastError = true)]
+        internal static extern int GetWindowTextLength(IntPtr hwnd);
+
+        [DllImport("user32")]
+        public static extern int GetSystemMetrics(int nIndex);
+
+        [DllImport("user32")]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool ScreenToClient(IntPtr hWnd, ref Point lpPoint);
 
@@ -59,5 +71,21 @@ namespace VVVV.Utils.Win32
         [DllImport("user32")]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool CloseTouchInputHandle(System.IntPtr lParam);
+
+        [DllImport("user32")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool SetGestureConfig(IntPtr hWnd, int dwReserved, int cIDs, ref GESTURECONFIG pGestureConfig, int cbSize);
+
+        [DllImport("user32")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool GetGestureInfo(IntPtr hGestureInfo, ref GESTUREINFO pGestureInfo);
+
+        [DllImport("user32")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool GetGestureExtraArgs(IntPtr hGestureInfo, int cbExtraArgs, byte[] pExtraArgs);
+
+        [DllImport("user32")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool CloseGestureInfoHandle(IntPtr hGestureInfo);
     }
 }

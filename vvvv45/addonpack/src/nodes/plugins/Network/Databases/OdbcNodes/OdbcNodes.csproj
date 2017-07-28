@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="14.0">
   <Import Project="..\..\..\Default.Plugin.Project.settings" />
   <PropertyGroup>
     <ProjectGuid>{06DAF05E-96D9-43C6-842E-F5148FE4CE20}</ProjectGuid>
@@ -19,6 +19,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataTypes\OdbcDataType.cs" />
+    <Compile Include="Nodes\OdbcExecBatchNode.cs" />
     <Compile Include="Nodes\OdbcDatabaseNode.cs" />
     <Compile Include="Nodes\OdbcDeleteNode.cs" />
     <Compile Include="Nodes\OdbcInsertNode.cs" />
